@@ -65,15 +65,14 @@ workflow {
                                                     tuple([id: meta.id, local_dataset_path: meta.path], path, irodspath)
                                                 }
     // Combine mapping and metadata files
-    filesToLoad = mapping.mix(metadata_qc).filter { meta, path, irodspath ->
-        irodspath.toString() =~ /.*solo_qc.*/
-    }
-    filesToLoad.toSortedList().view()
+    filesToLoad = mapping.mix(metadata_qc)
+    
     // Upload files to iRODS
     IRODS_STOREFILE(filesToLoad)
 
     IRODS_STOREFILE.out.md5.view()
 
     // Attach metadata
-    
+    //TODO: ?!?!?
+
 }
