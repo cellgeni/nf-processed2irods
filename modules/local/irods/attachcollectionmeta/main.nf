@@ -13,38 +13,40 @@ def metaToTsv(meta) {
     return tsv_string
 }
 
-process IRODS_ATTACHMETA {
+process IRODS_ATTACHCOLLECTIONMETA {
     tag "Attaching metadata for $prefix"
 
     input:
-    tuple val(meta), path(irodspath)
+    tuple val(meta), val(irodspath)
 
     output:
     path "versions.yml"           , emit: versions
 
     script:
-    def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
     meta_tsv = metaToTsv(meta)
     """
     # Create tsv file with metadata
     echo -e "$meta_tsv" > metadata.tsv
 
-    # If object is a collection, create a directory for it
+    # Create collection in iRODS if it doesn't exist
+    if [[ "${task.ext.create_if_not_exists}" == 'true' ]]; then
+        imkdir -p -V "$irodspath"
+    fi
 
     # Get existing metadata from iRODS
-    imeta ls ${task.ext.type} "$irodspath" > existing_metadata.txt
+    imeta ls -C "$irodspath" > existing_metadata.txt
 
     # Load metadata to iRODS
     while IFS=\$'\\t' read -r key value; do
         [[ -z "\$key" || -z "\$value" ]] && continue  # skip empty lines
 
         # Check if the key already exists in iRODS metadata
-        if grep -qzP "attribute: $key\nvalue: $value" existing_metadata.txt; then
+        if grep -qzP "attribute: \$key\nvalue: \$value" existing_metadata.txt; then
             echo "[SKIP] \$key=\$value already present"
         else
             echo "Adding \$key=\$value to iRODS metadata"
-            imeta add ${task.ext.type} "$irodspath" "$key" "$value"
+            imeta add -C "$irodspath" "\$key" "\$value"
         fi
     done < metadata.tsv
 
@@ -55,7 +57,6 @@ process IRODS_ATTACHMETA {
     """
 
     stub:
-    def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
     """
     echo $args
