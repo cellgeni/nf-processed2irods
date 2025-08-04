@@ -3,11 +3,90 @@ include { REPROCESS10X_MAPPINGQC } from './modules/local/reprocess10x/mappingqc'
 include { IRODS_STOREFILE } from './modules/local/irods/storefile'
 include { IRODS_ATTACHCOLLECTIONMETA } from './modules/local/irods/attachcollectionmeta'
 
+def helpMessage() {
+  log.info(
+    """
+    ===================
+    nf-processed2irods pipeline
+    ===================
+    This Nextflow pipeline stores processed single-cell genomics data and comprehensive metadata in iRODS for long-term data management and sharing.
+
+    Usage: nextflow run main.nf [parameters]
+
+    Required parameters:
+      --datasets <string>       Path to a CSV file containing dataset information with columns: 'id' (dataset identifier) and 'path' (local filesystem path to processed data directory)
+      --irodspath <string>      Base path in iRODS where datasets will be stored (e.g., "/archive/cellgeni/sanger/")
+
+    Optional parameters:
+      --help                    Display this help message
+      --remove_unmapped_reads   Remove unmapped read files (*.Unmapped.out.mate*.bz2) to save storage space (default: true)
+      --output_dir              Output directory for pipeline results (default: "results")
+      --publish_mode            File publishing mode (default: "copy")
+
+    Input file format:
+      The --datasets parameter expects a CSV file with the following structure:
+      
+      id,path
+      GSE123456,/path/to/processed/GSE123456
+      PRJEB12345,/path/to/processed/PRJEB12345
+      EGA_DATASET,/path/to/processed/EGA_DATASET
+
+    Pipeline workflow:
+      1. Dataset Discovery - Reads dataset information from CSV input file
+      2. Public Dataset Detection - Identifies public datasets (GSE*, E-MTAB-*, PRJEB* patterns)
+      3. Metadata Parsing - Extracts metadata from public repositories for public datasets
+      4. Quality Control - Generates mapping QC statistics from STARsolo output (if not present)
+      5. File Collection - Gathers all data files and metadata files for upload
+      6. iRODS Upload - Transfers files to iRODS with checksums
+      7. Metadata Attachment - Attaches comprehensive metadata to iRODS collections
+
+    Examples:
+      # Basic usage - Upload processed datasets to iRODS
+      nextflow run main.nf --datasets datasets.csv --irodspath "/archive/cellgeni/sanger/"
+      
+      # Remove unmapped reads to save storage space (default behavior)
+      nextflow run main.nf --datasets datasets.csv --irodspath "/archive/cellgeni/sanger/" --remove_unmapped_reads true
+      
+      # Keep all files including unmapped reads
+      nextflow run main.nf --datasets datasets.csv --irodspath "/archive/cellgeni/sanger/" --remove_unmapped_reads false
+      
+      # Custom output directory
+      nextflow run main.nf --datasets datasets.csv --irodspath "/archive/cellgeni/sanger/" --output_dir "my_results"
+
+    Expected data structure:
+      Each dataset directory should contain:
+      - Sample directories: Named with sample identifiers containing STARsolo output files
+      - QC files: *solo_qc.tsv files (generated automatically if missing)
+      - Metadata files: For public datasets, metadata will be automatically retrieved
+
+    Metadata handling:
+      - Public datasets (GSE*, E-MTAB-*, PRJEB*): Automatic metadata retrieval from public repositories
+      - All datasets: Extraction of sample-level metadata (species, sequencing type, strand, read counts, whitelist version)
+      - iRODS collections: Comprehensive metadata attachment for searchability and provenance
+
+    For more details, see the README.md file in this repository.
+    """.stripIndent()
+  )
+}
+
+def missingParametersError() {
+  log.error("Missing input parameters")
+  helpMessage()
+  error("Please provide all required parameters: --datasets and --irodspath. See --help for more information.")
+}
+
 def checkIfPublic(series) {
     return (series =~ /GSE\d+/) || (series =~ /E-MTAB-\d+/) || (series =~ /PRJEB\d+/)
 }
 
+
+
 workflow {
+    if (params.help) {
+        helpMessage()
+    } else if (!params.datasets || !params.irodspath) {
+        missingParametersError()
+    }
     // Read datasets from a CSV file
     channel.fromPath(params.datasets, checkIfExists: true)
            .splitCsv(header: true)
