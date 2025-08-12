@@ -68,7 +68,7 @@ nextflow run main.nf \
 * `--irodspath` — Base path in iRODS where datasets will be stored (e.g., "/archive/cellgeni/sanger/")
 
 ### Optional Parameters:
-* `--remove_unmapped_reads` — Remove unmapped read files (*.Unmapped.out.mate*.bz2) to save storage space (`default: true`)
+* `--remove_unmapped_reads` — Remove unmapped read files (*.Unmapped.out.mate*.bz2) to save storage space (`default: false`)
 * `--output_dir` — Output directory for pipeline results (`default: "results"`)
 * `--publish_mode` — File publishing mode (`default: "copy"`)
 
