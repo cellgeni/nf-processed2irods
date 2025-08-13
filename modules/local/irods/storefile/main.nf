@@ -1,12 +1,11 @@
 process IRODS_STOREFILE {
     tag "Loading $irodspath"
-    label 'process_single'
 
     input:
     tuple val(meta), path(file), val(irodspath)
 
     output:
-    tuple val(meta), val(irodspath), env('md5'),  emit: md5
+    tuple val(meta), val(irodspath), env('md5'), env('irods_md5'),  emit: md5
     path "versions.yml"      , emit: versions
 
     script:
