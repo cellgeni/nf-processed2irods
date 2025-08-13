@@ -4,7 +4,7 @@ process REPROCESS10X_MAPPINGQC {
     container "${ workflow.containerEngine == 'singularity' ? 'docker://quay.io/cellgeni/reprocess_10x:dev': 'quay.io/cellgeni/reprocess_10x:dev' }"
 
     input:
-    tuple val(meta), path(dataset)
+    tuple val(meta), path(samples)
 
     output:
     tuple val(meta), path("${prefix}.solo_qc.tsv"), emit: tsv
@@ -17,12 +17,10 @@ process REPROCESS10X_MAPPINGQC {
     def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    workdir=\$(pwd) 
-    cd ${dataset}
-    solo_QC.sh > \${workdir}/${prefix}.solo_qc.tsv
+    solo_QC.sh > ${prefix}.solo_qc.tsv
 
     reprocess_version=\$(grep reprocess /versions.txt | cut -d ':' -f 2)
-    cat <<-END_VERSIONS > \${workdir}/versions.yml
+    cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         cellgeni/reprocess_public_10x: \$reprocess_version
     END_VERSIONS
