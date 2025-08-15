@@ -77,5 +77,4 @@ workflow REPROCESSING_COLLECT_METADATA {
     mapping_metadata = mappingqc
     public_metadata = public_metadata
     versions = versions
-    
 }
