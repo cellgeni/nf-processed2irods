@@ -1,6 +1,12 @@
-# nf-processed2irods
+# nf-processed2i## Pipeline Workflow
 
-A Nextflow pipeline to store processed single-cell genomics data and metadata in iRODS (Integrated Rule-Oriented Data System).
+1. **Dataset/Sample Discovery** - Reads dataset or sample information from CSV input file
+2. **Public Dataset Detection** - Identifies public datasets (GSE*, E-MTAB-*, PRJEB* patterns) 
+3. **Metadata Parsing** - Extracts metadata from public repositories for public datasets
+4. **Quality Control** - Generates mapping QC statistics from STARsolo output (if not already present)
+5. **File Collection** - Gathers all data files and metadata files for upload
+6. **iRODS Upload** - Transfers files to iRODS with checksums
+7. **Metadata Attachment** - Attaches comprehensive metadata to iRODS collectionsextflow pipeline to store processed single-cell genomics data and metadata in iRODS (Integrated Rule-Oriented Data System).
 
 ## Overview
 
@@ -26,7 +32,7 @@ This pipeline processes datasets containing single-cell RNA sequencing results (
 
 ## Examples
 
-### Basic Usage
+### Basic Usage with Datasets
 Upload processed datasets to iRODS:
 ```bash
 nextflow run main.nf \
@@ -34,22 +40,39 @@ nextflow run main.nf \
     --irodspath "/archive/cellgeni/sanger/"
 ```
 
-### With Unmapped Reads Removal
-Remove large unmapped read files to save storage space:
+### Basic Usage with Individual Samples
+Upload individual samples to iRODS:
 ```bash
 nextflow run main.nf \
-    --datasets datasets.csv \
-    --irodspath "/archive/cellgeni/sanger/" \
-    --remove_unmapped_reads true
+    --samples samples.csv \
+    --irodspath "/archive/cellgeni/sanger/"
 ```
 
-### Keep Unmapped Reads
-Preserve all files including unmapped reads:
+### Custom File Filtering
+Specify which file types to ignore during upload:
 ```bash
 nextflow run main.nf \
     --datasets datasets.csv \
     --irodspath "/archive/cellgeni/sanger/" \
-    --remove_unmapped_reads false
+    --ignore_pattern ".bam,.fastq.gz"
+```
+
+### Disable Public Metadata Collection
+Skip automatic metadata retrieval for public datasets:
+```bash
+nextflow run main.nf \
+    --datasets datasets.csv \
+    --irodspath "/archive/cellgeni/sanger/" \
+    --collect_public_metadata false
+```
+
+### Enable Verbose Output
+Get detailed logging information:
+```bash
+nextflow run main.nf \
+    --datasets datasets.csv \
+    --irodspath "/archive/cellgeni/sanger/" \
+    --verbose true
 ```
 
 ### Custom Output Directory
@@ -65,16 +88,24 @@ nextflow run main.nf \
 
 ### Required Parameters:
 * `--datasets` — Path to a CSV file containing dataset information with columns: `id` (dataset identifier) and `path` (local filesystem path to processed data directory)
+  **OR**
+* `--samples` — Path to a CSV file containing sample information with columns: `id` (sample identifier), `path` (local filesystem path), and optionally `dataset_id`
 * `--irodspath` — Base path in iRODS where datasets will be stored (e.g., "/archive/cellgeni/sanger/")
 
 ### Optional Parameters:
-* `--remove_unmapped_reads` — Remove unmapped read files (*.Unmapped.out.mate*.bz2) to save storage space (`default: false`)
 * `--output_dir` — Output directory for pipeline results (`default: "results"`)
 * `--publish_mode` — File publishing mode (`default: "copy"`)
+* `--ignore_pattern` — Comma-separated list of file patterns to ignore during upload (`default: ".bam,.bai,.cram,.crai,.fastq.gz,.fq.gz,.fastq,.fq,.mate1.bz2,.mate2.bz2,.sh,.bsub,.pl"`)
+* `--collect_public_metadata` — Collect metadata from public repositories for public datasets (`default: true`)
+* `--parse_mapper_metrics` — Parse mapping QC metrics from STARsolo output (`default: true`)
+* `--verbose` — Enable verbose output (`default: false`)
 
 ## Input File Format
 
-The `--datasets` parameter expects a CSV file with the following structure:
+The pipeline supports two input modes:
+
+### Option 1: Dataset-based input (`--datasets`)
+CSV file with the following structure:
 
 ```csv
 id,path
@@ -85,10 +116,39 @@ EGA_DATASET,/path/to/processed/EGA_DATASET
 
 Where:
 - `id`: Unique dataset identifier (can be GEO accession, ENA project, or custom ID)
-- `path`: Absolute path to the directory containing processed single-cell data
+- `path`: Absolute path to the directory containing processed single-cell data with sample subdirectories
+
+### Option 2: Sample-based input (`--samples`)
+CSV file with the following structure:
+
+```csv
+id,path,dataset_id
+SAMPLE1,/path/to/processed/SAMPLE1,GSE123456
+SAMPLE2,/path/to/processed/SAMPLE2,GSE123456
+SAMPLE3,/path/to/processed/SAMPLE3,
+```
+
+Where:
+- `id`: Unique sample identifier 
+- `path`: Absolute path to the sample directory containing processed single-cell data
+- `dataset_id`: (Optional) Dataset identifier to group samples under. If omitted, samples will be uploaded directly to irodspath/id
+
+## iRODS Path Structure
+
+The pipeline uploads data to different iRODS paths depending on the input type:
+
+- **Datasets (`--datasets`)**: Uploaded to `irodspath/id`
+  - Example: `/archive/cellgeni/sanger/GSE123456/`
+  
+- **Samples with dataset_id (`--samples`)**: Uploaded to `irodspath/dataset_id/id`
+  - Example: `/archive/cellgeni/sanger/GSE123456/SAMPLE1/`
+  
+- **Samples without dataset_id (`--samples`)**: Uploaded to `irodspath/id`
+  - Example: `/archive/cellgeni/sanger/SAMPLE1/`
 
 ## Expected Data Structure
 
+### For Dataset-based Input
 Each dataset directory should contain:
 - **Sample directories**: Named with sample identifiers containing STARsolo output files
 - **QC files**: `*solo_qc.tsv` files (generated automatically if missing)
@@ -105,6 +165,19 @@ GSE123456/
 ├── SAMPLE2/
 │   └── ...
 └── GSE123456_solo_qc.tsv
+```
+
+### For Sample-based Input
+Each sample directory should contain STARsolo output files:
+```
+SAMPLE1/
+├── Aligned.sortedByCoord.out.bam
+├── Log.final.out
+├── Solo.out/
+│   ├── Gene/
+│   ├── GeneFull/
+│   └── ...
+└── ...
 ```
 
 ## Metadata Handling
@@ -124,17 +197,41 @@ The pipeline extracts and stores:
 
 ## iRODS Structure
 
-Data is organized in iRODS as:
+Data is organized in iRODS based on the input type:
+
+### For Dataset-based Input (`--datasets`)
 ```
 /archive/cellgeni/sanger/
-├── GSE123456/
-│   ├── SAMPLE1/
+├── GSE123456/                    # Dataset uploaded to irodspath/id
+│   ├── SAMPLE1/                  # Individual samples within dataset
 │   │   ├── [STARsolo output files]
 │   │   └── [metadata attached to collection]
 │   ├── SAMPLE2/
 │   └── [dataset metadata files]
-└── PRJEB12345/
+└── PRJEB12345/                   # Another dataset
     └── ...
+```
+
+### For Sample-based Input (`--samples`)
+**With dataset_id specified:**
+```
+/archive/cellgeni/sanger/
+├── GSE123456/                    # Dataset ID from CSV
+│   ├── SAMPLE1/                  # Sample uploaded to irodspath/dataset_id/id
+│   │   ├── [STARsolo output files]
+│   │   └── [metadata attached to collection]
+│   └── SAMPLE2/
+└── ...
+```
+
+**Without dataset_id specified:**
+```
+/archive/cellgeni/sanger/
+├── SAMPLE1/                      # Sample uploaded directly to irodspath/id
+│   ├── [STARsolo output files]
+│   └── [metadata attached to collection]
+├── SAMPLE2/
+└── ...
 ```
 
 ## System Requirements
