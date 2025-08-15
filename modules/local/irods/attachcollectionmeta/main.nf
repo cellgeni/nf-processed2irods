@@ -41,8 +41,8 @@ process IRODS_ATTACHCOLLECTIONMETA {
     while IFS=\$'\\t' read -r key value; do
         [[ -z "\$key" || -z "\$value" ]] && continue  # skip empty lines
 
-        # Check if the key already exists in iRODS metadata
-        if grep -qzP "attribute: \$key\nvalue: \$value" existing_metadata.txt; then
+        # Check if the key value pair already exists in iRODS metadata
+        if grep -qzP "attribute: \$key\\nvalue: \$value" existing_metadata.txt; then
             echo "[SKIP] \$key=\$value already present"
         else
             echo "Adding \$key=\$value to iRODS metadata"
