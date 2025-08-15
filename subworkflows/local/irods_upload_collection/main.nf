@@ -11,7 +11,6 @@ workflow IRODS_UPLOAD_COLLECTION {
     take:
     directories     // channel: [ val(meta), originalpath, irodspath ]
     ignore_pattern  // list: file extensions to ignore
-    verbose         // boolean: enable verbose logging
 
     main:
     // STEP 1: Upload directories to iRODS
