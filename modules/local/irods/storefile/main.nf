@@ -28,7 +28,7 @@ process IRODS_STOREFILE {
     echo "Loading $file to iRODS at $irodspath"
     iput $args \
         -N ${task.cpus} \
-        --metadata="series;${prefix};;md5;\${md5};;" \
+        --metadata="md5;\${md5};;" \
         "$file" "$irodspath"
 
     # Calculate iRODS md5
