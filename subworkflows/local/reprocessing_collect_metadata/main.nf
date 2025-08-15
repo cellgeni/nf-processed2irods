@@ -11,8 +11,8 @@ workflow REPROCESSING_COLLECT_METADATA {
 
     take:
     samples                       // channel: [ [id: dataset_id], [ path(sample_dir1), path(sample_dir2), ...] ]
-    collect_public_metadata_flag  // boolean: true/false
     parse_mapper_metrics_flag     // boolean: true/false
+    collect_public_metadata_flag  // boolean: true/false
     verbose                       // boolean: true/false
     main:
     // STEP 1: Parse mapping metadata if parse_mapper_metrics_flag is true
@@ -61,7 +61,7 @@ workflow REPROCESSING_COLLECT_METADATA {
 
     // Parse public metadata
     REPROCESS10X_PARSEMETADATA(collect_public_metadata)
-    public_metadata = REPROCESS10X_MAPPINGQC.out.tsv
+    public_metadata = REPROCESS10X_PARSEMETADATA.out.tsv
         .transpose()
         .mix(
             REPROCESS10X_PARSEMETADATA.out.soft,
@@ -74,7 +74,7 @@ workflow REPROCESSING_COLLECT_METADATA {
         REPROCESS10X_PARSEMETADATA.out.versions
     )
     emit:
-    mappingqc = mappingqc
+    mapping_metadata = mappingqc
     public_metadata = public_metadata
     versions = versions
     
