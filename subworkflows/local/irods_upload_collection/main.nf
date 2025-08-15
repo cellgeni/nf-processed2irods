@@ -41,8 +41,6 @@ workflow IRODS_UPLOAD_COLLECTION {
         }
     }
 
-    files.collectFile(name: 'pathlist.csv', newLine: true, storeDir: params.output_dir, sort: true) { meta, path, irodspath -> "${meta.id},${path},${irodspath}" }
-
     IRODS_STOREFILE(files)
 
     // STEP 2: Attach metadata to iRODS collection
