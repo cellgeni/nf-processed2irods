@@ -1,4 +1,3 @@
-include { DATASETS2IRODS } from './subworkflows/local/datasets2irods'
 include { REPROCESSING_COLLECT_METADATA } from './subworkflows/local/reprocessing_collect_metadata'
 include { IRODS_UPLOAD_COLLECTION } from './subworkflows/local/irods_upload_collection'
 include { IRODS_ATTACHCOLLECTIONMETA } from './modules/local/irods/attachcollectionmeta'
@@ -29,6 +28,7 @@ def helpMessage() {
         --collect_public_metadata Collect metadata from public repositories for public datasets (default: true)
         --parse_mapper_metrics    Parse mapping QC metrics from STARsolo output (default: true)
         --verbose                 Enable verbose output (default: false)
+        --dry_run                 Perform a dry run without uploading files to iRODS (default: false)
 
       Input file formats:
         
@@ -76,6 +76,9 @@ def helpMessage() {
         
         # Custom output directory
         nextflow run main.nf --datasets datasets.csv --irodspath "/archive/cellgeni/sanger/" --output_dir "my_results"
+        
+        # Dry run - test pipeline without uploading to iRODS
+        nextflow run main.nf --datasets datasets.csv --irodspath "/archive/cellgeni/sanger/" --dry_run true
 
       Expected data structure:
         Each dataset/sample directory should contain:
@@ -268,11 +271,13 @@ workflow {
         }
 
     // Run iRODS upload workflow to upload sample directories to iRODS and attach metadata
-    ignore_pattern = params.ignore_pattern.split(',').collect { it.trim() }
-    IRODS_UPLOAD_COLLECTION(
-        samples,
-        ignore_pattern
-    )
+    if (!params.dry_run) {
+        ignore_pattern = params.ignore_pattern.split(',').collect { it.trim() }
+        IRODS_UPLOAD_COLLECTION(
+            samples,
+            ignore_pattern
+        )
+    }
 
     // STEP 3: For each dataset upload metadata files to iRODS and attach metadata to dataset collections
     // Collect relevant metadata files for each dataset
@@ -301,23 +306,26 @@ workflow {
         }
         .set { collection_metadata }
     
-    // Upload metadata files to iRODS
-    IRODS_STOREFILE(metadata_files)
+    // Run iRODS commmands if not in dry run mode
+    if (!params.dry_run) {
+        // Upload metadata files to iRODS
+        IRODS_STOREFILE(metadata_files)
 
-    // Collect versions of the tools used
-    IRODS_UPLOAD_COLLECTION.out.md5
-        .mix(IRODS_STOREFILE.out.md5)
-        .collectFile(name: 'md5sums.csv', newLine: false, storeDir: params.output_dir, sort: true, keepHeader: true, skip: 1) { meta, irodspath, md5, md5irods -> 
-            def header = "sample_id,filepath,irodspath,md5,irodsmd5"
-            def line = "${meta.id},${meta.path},${irodspath},${md5},${md5irods}"
-            "${header}\n${line}\n"
-        }
-        .subscribe { __ -> 
-            log.info("MD5 checksums saved to ${params.output_dir}/md5sums.csv")
-        }
+        // Collect versions of the tools used
+        IRODS_UPLOAD_COLLECTION.out.md5
+            .mix(IRODS_STOREFILE.out.md5)
+            .collectFile(name: 'md5sums.csv', newLine: false, storeDir: params.output_dir, sort: true, keepHeader: true, skip: 1) { meta, irodspath, md5, md5irods -> 
+                def header = "sample_id,filepath,irodspath,md5,irodsmd5"
+                def line = "${meta.id},${meta.path},${irodspath},${md5},${md5irods}"
+                "${header}\n${line}\n"
+            }
+            .subscribe { __ -> 
+                log.info("MD5 checksums saved to ${params.output_dir}/md5sums.csv")
+            }
 
-    // Attach metadata to iRODS dataset collections
-    IRODS_ATTACHCOLLECTIONMETA(collection_metadata)
+        // Attach metadata to iRODS dataset collections
+        IRODS_ATTACHCOLLECTIONMETA(collection_metadata)
+    }
 
     // Collect dataset metadata to file
     collection_metadata.collectFile(name: 'dataset_metadata.csv', newLine: false, storeDir: params.output_dir, sort: true, keepHeader: true, skip: 1) { meta, irods_collection_path ->

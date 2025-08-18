@@ -6,7 +6,23 @@
 4. **Quality Control** - Generates mapping QC statistics from STARsolo output (if not already present)
 5. **File Collection** - Gathers all data files and metadata files for upload
 6. **iRODS Upload** - Transfers files to iRODS with checksums
-7. **Metadata Attachment** - Attaches comprehensive metadata to iRODS collectionsextflow pipeline to store processed single-cell genomics data and metadata in iRODS (Integrated Rule-Oriented Data System).
+7. **Metadata Attachment** - Attaches comprehensive metadata to iRODS collections
+
+## Dry Run Mode
+
+The pipeline supports a dry run mode (`--dry_run true`) that allows you to test and validate your pipeline configuration without actually uploading data to iRODS. This is particularly useful for:
+
+### What Dry Run Does:
+- **Validates input parameters** - Checks that all required parameters are provided and correctly formatted
+- **Processes metadata** - Runs all metadata collection and parsing steps
+- **Generates QC reports** - Creates mapping statistics and quality control files
+- **Creates output files** - Generates `sample_metadata.csv` and `dataset_metadata.csv` files locally
+- **Shows intended operations** - Displays what files would be uploaded and where
+
+### What Dry Run Skips:
+- **iRODS file uploads** - No files are actually transferred to iRODS storage
+- **iRODS metadata attachment** - No metadata is attached to iRODS collections
+- **MD5 checksum validation** - No checksums are computed or compared with iRODS
 
 ## Overview
 
@@ -84,6 +100,21 @@ nextflow run main.nf \
     --output_dir "my_results"
 ```
 
+### Dry Run (Test Mode)
+Test the pipeline without actually uploading files to iRODS:
+```bash
+nextflow run main.nf \
+    --datasets datasets.csv \
+    --irodspath "/archive/cellgeni/sanger/" \
+    --dry_run true
+```
+
+This mode will:
+- Validate all input parameters and files
+- Process metadata and generate QC reports
+- Show what would be uploaded without actual iRODS operations
+- Create local output files (metadata CSV files) for review
+
 ## Pipeline Parameters
 
 ### Required Parameters:
@@ -99,6 +130,7 @@ nextflow run main.nf \
 * `--collect_public_metadata` — Collect metadata from public repositories for public datasets (`default: true`)
 * `--parse_mapper_metrics` — Parse mapping QC metrics from STARsolo output (`default: true`)
 * `--verbose` — Enable verbose output (`default: false`)
+* `--dry_run` — Perform a dry run without uploading files to iRODS (`default: false`)
 
 ## Input File Format
 
