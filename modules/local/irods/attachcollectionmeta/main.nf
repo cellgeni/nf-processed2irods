@@ -14,7 +14,7 @@ def metaToTsv(meta) {
 }
 
 process IRODS_ATTACHCOLLECTIONMETA {
-    tag "Attaching metadata for $prefix"
+    tag "Attaching metadata for $meta.id"
 
     input:
     tuple val(meta), val(irodspath)
@@ -23,7 +23,7 @@ process IRODS_ATTACHCOLLECTIONMETA {
     path "versions.yml"           , emit: versions
 
     script:
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def meta_tsv = metaToTsv(meta)
     """
     # Create tsv file with metadata
