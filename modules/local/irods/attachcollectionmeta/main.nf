@@ -14,7 +14,7 @@ def metaToTsv(meta) {
 }
 
 process IRODS_ATTACHCOLLECTIONMETA {
-    tag "Attaching metadata for $meta.id"
+    tag "Attaching metadata for ${meta.id}"
 
     input:
     tuple val(meta), val(irodspath)
