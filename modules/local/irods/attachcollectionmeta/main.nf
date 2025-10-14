@@ -1,5 +1,5 @@
 def metaToTsv(meta) {
-    tsv_string = meta
+    def tsv_string = meta
                      .findAll { key, value -> key != 'id' } //drop 'id' key
                      .collectMany { key, value ->
                          value.toString()
@@ -8,7 +8,7 @@ def metaToTsv(meta) {
                               .findAll { it } // filter out empty strings
                               .collect { v -> "${key}\t${v}" } // create key-value pairs
                     }
-                    .join('\n')
+                    .join('\\n')
                     .stripIndent() // remove leading whitespace
     return tsv_string
 }
@@ -24,7 +24,7 @@ process IRODS_ATTACHCOLLECTIONMETA {
 
     script:
     prefix = task.ext.prefix ?: "${meta.id}"
-    meta_tsv = metaToTsv(meta)
+    def meta_tsv = metaToTsv(meta)
     """
     # Create tsv file with metadata
     echo -e "$meta_tsv" > metadata.tsv
@@ -57,7 +57,7 @@ process IRODS_ATTACHCOLLECTIONMETA {
     """
 
     stub:
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
     echo $args
     
