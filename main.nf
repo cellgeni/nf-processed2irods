@@ -128,8 +128,6 @@ workflow {
         .map { meta ->
           tuple( meta, meta.path )
         }
-        // Save dataset list to a channel
-        .tap { datasets }
         // Get all samples in dataset directory
         .map { meta, path -> 
             def unified_path = path.toString().replaceFirst('/$', '')
@@ -241,6 +239,7 @@ workflow {
                 metadata
             ]
         }
+    
 
     // // STEP 2: Upload sample directories to iRODS
     samples = samples
@@ -272,7 +271,7 @@ workflow {
 
     // Run iRODS upload workflow to upload sample directories to iRODS and attach metadata
     if (!params.dry_run) {
-        ignore_pattern = params.ignore_pattern.split(',').collect { it.trim() }
+        ignore_pattern = params.ignore_pattern ? params.ignore_pattern.split(',').collect { it.trim() }: []
         IRODS_UPLOAD_COLLECTION(
             samples,
             ignore_pattern

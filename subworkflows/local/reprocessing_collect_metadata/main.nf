@@ -19,7 +19,7 @@ workflow REPROCESSING_COLLECT_METADATA {
     // Look for existing QC stats in sample directories
     parse_mapper_metrics = parse_mapper_metrics_flag ? samples : channel.empty()
     parse_mapper_metrics = parse_mapper_metrics.branch { meta, pathlist ->
-            def qc_stats = meta.path ? file("${meta.path}/*solo_qc.tsv").find() : null
+            def qc_stats = meta.path ? file("${meta.path}/*solo_qc*.tsv").find() : null
             qc: !qc_stats
             skip: true
                 return [
@@ -31,11 +31,11 @@ workflow REPROCESSING_COLLECT_METADATA {
     // Report to user if verbose is enabled
     if ( verbose ) {
         parse_mapper_metrics.skip.view { meta, qc_path ->
-            "STEP1: Found QC stats for ${meta.id} at ${qc_path.name}"
+            "COLLECT METADATA STEP1: Found QC stats for ${meta.id} at ${qc_path.name}"
         }
         parse_mapper_metrics.qc.view { meta, pathlist ->
             def sample_string = pathlist.size() > 1 ?  "with samples: ${pathlist.collect { it.baseName }.join(', ')}" : ''
-            "STEP1: Parsing STARsolo QC metrics for ${meta.id} ${sample_string}"
+            "COLLECT METADATA STEP1: Parsing STARsolo QC metrics for ${meta.id} ${sample_string}"
         }
     }
     // Parse QC stats for samples with no QC files
@@ -55,7 +55,7 @@ workflow REPROCESSING_COLLECT_METADATA {
     // Report to user if verbose is enabled
     if ( verbose ) {
         collect_public_metadata.view { meta, sample_ids ->
-            "STEP2: Collecting public metadata for ${meta.id} with samples: ${sample_ids.join(', ')}"
+            "COLLECT METADATA STEP2: Collecting public metadata for ${meta.id} with samples: ${sample_ids.join(', ')}"
         }
     }
 
