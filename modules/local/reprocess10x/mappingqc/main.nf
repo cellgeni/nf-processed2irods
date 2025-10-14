@@ -7,7 +7,7 @@ process REPROCESS10X_MAPPINGQC {
     tuple val(meta), path(samples)
 
     output:
-    tuple val(meta), path("${prefix}.solo_qc.tsv"), emit: tsv
+    tuple val(meta), path("*.tsv"), emit: tsv
     path "versions.yml"           , emit: versions
 
     when:
@@ -15,9 +15,10 @@ process REPROCESS10X_MAPPINGQC {
 
     script:
     def args = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}"
+    def suffix = task.ext.suffix ?: 'solo_qc'
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    solo_QC.sh > ${prefix}.solo_qc.tsv
+    solo_QC.sh > ${prefix}.${suffix}.tsv
 
     reprocess_version=\$(grep reprocess /versions.txt | cut -d ':' -f 2)
     cat <<-END_VERSIONS > versions.yml
