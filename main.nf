@@ -14,24 +14,49 @@ workflow {
     samples = params.samples ? channel.fromPath(params.samples, checkIfExists: true) : channel.empty()
 
     /////////////// STEP 0: INPUTS ///////////////////////
-    datasets = datasets
-        .splitCsv(header: true, sep: ',')
-        .map { row -> tuple([id: row.id], files("${row.path}/*", type: 'any', checkIfExists: true).sort())}
-
     samples = samples
         .splitCsv(header: true, sep: ',')
-        .map { row -> tuple([id: row.dataset_id], file(row.path, type: 'dir', checkIfExists: true))}
+        .map { row -> tuple([id: row.id, dataset_id: row.dataset_id], file(row.path, type: 'dir', checkIfExists: true))}
+    
+    datasets = samples
+        .map { meta, path -> tuple(meta.dataset_id, meta.id, path) }
         .groupTuple(sort: 'hash')
+        .map { dataset_id, samplelist, paths -> tuple([id: dataset_id, samples: samplelist], paths) }
 
-    /////////////// STEP 1: VALIDATE LOCAL ///////////////
-    REPROCESS10X_VALIDATELOCAL(datasets.mix(samples))
+    /////////////// STEP 1.1: CHECK THAT SAMPLES ARE NOT ON IRODS ///////////////////////
+    irodssamples = samples
+        .filter { meta, _path -> 
+            def collection = params.irodsbase + "/${meta.dataset_id}/${meta.id}"
+            def exists = "ils ${collection}".execute()
+            exists.waitFor()
+            exists.exitValue() == 0
+        }
+        .view { meta, _path ->
+            log.warn("Sample ${meta.id} from dataset ${meta.dataset_id} already exists on iRODS. Exiting...")
+        }
+        .collect()
+        .subscribe { irodscollected -> 
+            if (irodscollected.size() > 0) {
+                error("One or more samples already exist on iRODS. Exiting...")
+            }
+        }
+
+    /////////////// STEP 1.2: VALIDATE LOCAL DIRECTORIES ///////////////
+    REPROCESS10X_VALIDATELOCAL(datasets)
 
     /////////////// STEP 2: FETCH METADATA ////////////////////////
     if (params.fetchpublic) {
         public_datasets = REPROCESS10X_VALIDATELOCAL.out.dataset
             .filter { meta, _pathlist -> checkIfPublic(meta.id) }
             .map { meta, pathlist ->
-                tuple(meta, pathlist.findAll { it -> it.isDirectory() }.collect { it -> it.baseName }.sort().join(','))
+                def paths = pathlist instanceof List ? pathlist : [pathlist] // ensure pathlist is a list
+                def processedsamples = paths.findAll { it -> it.isDirectory() }.collect { it -> it.baseName }
+                def proc = ["ils", "${params.irodsbase}/${meta.id}".toString()].execute() // check if the dataset already exists on iRODS
+                proc.waitFor()
+                def uploadedsamples = proc.exitValue() == 0 ?
+                    proc.in.text.readLines().findAll { it -> it.trim().startsWith('C- ') }.collect { it -> it.trim().split('/')[-1] } :
+                    []
+                tuple(meta, (processedsamples + uploadedsamples).unique().sort().join(','))
             }
         FETCH10XMETA(public_datasets)
         metadata = metadata.mix(
