@@ -1,0 +1,12 @@
+name: local/reprocess10x/irodsbarcodesandlogs
+version: 1.0.0
+description: A brief description of the local/reprocess10x/irodsbarcodesandlogs module
+license: Apache-2.0
+input:
+  - name: greeting
+    type: string
+    description: A greeting string
+output:
+  - name: stdout
+    type: string
+    description: The greeting message
