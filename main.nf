@@ -1,4 +1,5 @@
 include { REPROCESS10X_VALIDATELOCAL } from './modules/local/reprocess10x/validatelocal'
+include { REPROCESS10X_IRODSBARCODESANDLOGS } from './modules/local/reprocess10x/irodsbarcodesandlogs'
 include { FETCH10XMETA } from 'cellgeni/fetch10xmeta'
 include { STARSOLOQC } from 'cellgeni/starsoloqc'
 
@@ -67,11 +68,26 @@ workflow {
         )
     }
 
-    ////////////// STEP 3: COLLECT STARSOLO QC ////////////////////////
+    ////////////// STEP 3.1: DOWNLOAD BARCODES AND LOGS FOR PROCESSED SAMPLES ////////////////////////
+    processedsamples = REPROCESS10X_VALIDATELOCAL.out.dataset
+        .flatMap { meta, _pathlist ->
+            def proc = ["ils", "${params.irodsbase}/${meta.id}".toString()].execute() // check if the dataset already exists on iRODS
+            proc.waitFor()
+            def uploadedsamples = proc.exitValue() == 0 ?
+                proc.in.text.readLines().findAll { it -> it.trim().startsWith('C- ') }.collect { it -> it.trim().substring(3).trim() } :
+                []
+            uploadedsamples.collect { irodspath -> [[id: irodspath.split('/')[-1], dataset_id: meta.id], irodspath] }
+        }
+
+    REPROCESS10X_IRODSBARCODESANDLOGS(processedsamples)
+    
+    ////////////// STEP 3.2: COLLECT STARSOLO QC ////////////////////////
     if (params.soloqc) {
-        noqcdatasets = REPROCESS10X_VALIDATELOCAL.out.dataset
-            .filter { _meta, pathlist ->  !pathlist.any { it.name ==~ /.*solo_qc.*\.tsv/ }}
-        STARSOLOQC(noqcdatasets)
+        groupedsamples = samples.mix(REPROCESS10X_IRODSBARCODESANDLOGS.out.sample)
+            .map { meta, path -> tuple(meta.dataset_id, meta.id, path) }
+            .groupTuple(sort: 'hash')
+            .map { dataset_id, samplelist, paths -> tuple([id: dataset_id, samples: samplelist], paths) }
+        STARSOLOQC(groupedsamples)
         metadata = metadata.mix(STARSOLOQC.out.tsv)
     }
 
