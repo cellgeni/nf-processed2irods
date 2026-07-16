@@ -1,0 +1,46 @@
+name: reprocess10x_aggregatemeta
+description: |
+  Aggregate all metadata files for a dataset into a single per-sample CSV and JSON.
+  Consumes the STARsolo QC table (*.solo_qc.tsv) and, for public datasets, the
+  fetched accession table (*.accessions.tsv), producing one record per sample keyed
+  by the STARsolo sample name. Any input source may be absent.
+keywords:
+  - metadata
+  - aggregation
+  - single-cell
+  - 10x
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing dataset information, e.g. [ id: dataset_id ]
+    - metafiles:
+        type: file
+        description: |
+          One or more metadata files staged together for a single dataset.
+          Recognised: '*<qc_suffix>.tsv' (STARsolo QC) and '*.accessions.tsv' (public).
+        pattern: "*.tsv"
+output:
+  - csv:
+      - - meta:
+            type: map
+            description: Groovy Map containing dataset information
+        - "*.metadata.csv":
+            type: file
+            description: Aggregated per-sample metadata, one row per sample.
+            pattern: "*.metadata.csv"
+  - json:
+      - - meta:
+            type: map
+            description: Groovy Map containing dataset information
+        - "*.metadata.json":
+            type: file
+            description: Aggregated per-sample metadata as a JSON array of records.
+            pattern: "*.metadata.json"
+  - versions:
+      - "versions.yml":
+          type: file
+          description: File containing software versions
+          pattern: "versions.yml"
+authors:
+  - "Aljes Binkevich"
