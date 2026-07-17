@@ -19,6 +19,10 @@ workflow {
     main:
     /////////////// PARAMETER INITIALIZATION ////////////////////////
     def ignore_ext = params.ignore_pattern ? params.ignore_pattern.split(',').collect { ext -> ext.trim() }.findAll { ext -> ext } : []
+    def sampleMetaColumns = [
+                'sample_id', 'dataset_id', 'species', 'paired', 'strand', 'total_reads',
+                'whitelist', 'cells', 'geo_sample', 'sample', 'experiment', 'run',
+            ]
 
     /////////////// INITIALIZE CHANNELS ////////////////////////
     versions            = channel.empty()
@@ -29,11 +33,9 @@ workflow {
     validatelocal       = channel.empty()
     validateirods       = channel.empty()
     md5sums             = channel.empty()
-    samples             = params.samples ? channel.fromPath(params.samples, checkIfExists: true) : channel.empty()
+    samples             = params.samples && !params.validatecollections ? channel.fromPath(params.samples, checkIfExists: true) : channel.empty()
     irodsconfig         = channel.value(file(params.irodsconfig, type: 'file', checkIfExists: true))
     validatecollections = params.validatecollections ? channel.fromPath(params.validatecollections, checkIfExists: true) : channel.empty()
-    validatecollections = validatecollections.splitCsv(header: true, sep: ',').map { row -> tuple([id: row.dataset_id], row.irodspath) }
-
     /////////////// STEP 0: INPUTS ///////////////////////
     samples = samples
         .splitCsv(header: true, sep: ',')
@@ -43,6 +45,11 @@ workflow {
         .map { meta, path -> tuple(meta.dataset_id, meta.id, path) }
         .groupTuple(sort: 'hash')
         .map { dataset_id, samplelist, paths -> tuple([id: dataset_id, samples: samplelist], paths) }
+    
+    validatecollections = validatecollections
+        .splitCsv(header: true, sep: ',')
+        .map { row -> tuple([id: row.study_accession_number, study_accession_number: row.study_accession_number], row.irodspath) }
+
 
     /////////////// STEP 1.1: VALIDATE LOCAL DIRECTORIES ///////////////
     REPROCESS10X_VALIDATELOCAL(datasets)
@@ -114,6 +121,21 @@ workflow {
         metadata = metadata.mix(STARSOLOQC.out.tsv)
         versions = versions.mix(STARSOLOQC.out.versions.first())
 
+        // Collect mapping QC stats
+        STARSOLOQC.out.tsv
+            .splitCsv(sep: '\t', skip: 1)
+            .collectFile(
+                name: 'mapping_qc_stats.tsv',
+                storeDir: params.outdir,
+                newLine: true,
+                seed: "Dataset\tSample\tRd_all\tRd_in_cells\tFrc_in_cells\tUMI_in_cells\tCells\tMed_nFeature\tGood_BC\tWL\tSpecies\tPaired\tStrand\tall_u+m\tall_u\texon_u+m\texon_u\tfull_u+m\tfull_u"
+            ) { meta, row -> 
+                "${meta.id}\t${row.join('\t')}"
+            }
+            .subscribe { __ -> 
+                    log.info("Mapping QC stats saved to ${params.outdir}/mapping_qc_stats.tsv")
+                }
+
         ////////////// STEP 4: AGGREGATE METADATA PER SAMPLE ////////////////////////
         // Group all metadata files (public fetched + STARsolo QC) per dataset and
         // aggregate them into a single per-sample CSV and JSON. The aggregator keys
@@ -126,6 +148,20 @@ workflow {
         REPROCESS10X_AGGREGATEMETA(datasetmeta)
         outmetadata = outmetadata.mix(REPROCESS10X_AGGREGATEMETA.out.csv, REPROCESS10X_AGGREGATEMETA.out.json)
         versions = versions.mix(REPROCESS10X_AGGREGATEMETA.out.versions.first())
+
+        REPROCESS10X_AGGREGATEMETA.out.csv
+            .splitCsv(sep: ',', skip: 1)
+            .collectFile(
+                name: 'sample_metadata.csv',
+                storeDir: params.outdir,
+                newLine: true,
+                seed: "${sampleMetaColumns.join(',')}"
+            ) { meta, row -> 
+                "${meta.id},${row.join(',')}"
+            }
+            .subscribe { __ -> 
+                    log.info("Sample metadata saved to ${params.outdir}/sample_metadata.csv")
+                }
 
         if (!params.collect_metadata) {
             ////////////// STEP 5: LOAD SAMPLES TO iRODS ////////////////////////
@@ -171,12 +207,45 @@ workflow {
             IRODS_ATTACHCOLLECTIONMETA(collectionmeta)
             versions = versions.mix(IRODS_ATTACHCOLLECTIONMETA.out.versions.first())
 
-            validatecollections = IRODS_STOREFILE.out.md5
-                .map { meta, _irodspath, _md5, _imd5 -> meta.dataset_id}
-                .unique()
-                .collect()
-                .flatten()
-                .map { dataset_id -> tuple([id: dataset_id], "${params.irodsbase}/${dataset_id}") }
+            validatecollections = validatecollections.mix(
+                IRODS_STOREFILE.out.md5
+                    .map { meta, _irodspath, _md5, _imd5 -> meta.dataset_id}
+                    .unique()
+                    .collect()
+                    .flatten()
+                    .map { dataset_id -> tuple([id: dataset_id], "${params.irodsbase}/${dataset_id}") }
+            )
+
+            outsamplemeta
+                .collectFile(
+                    name: 'sample_collection_metadata.csv',
+                    storeDir: params.outdir,
+                    newLine: true,
+                    seed: "${sampleMetaColumns.join(',')},irodspath",
+                    sort: false,
+                ) { meta, irodspath ->
+                    def fields = sampleMetaColumns.collect { col ->
+                        def value = meta.get(col, '')
+                        value instanceof List ? "\"${value.join(',')}\"" : value
+                    }
+                    "${fields.join(',')},${irodspath}"
+                }
+                .subscribe { __ ->
+                        log.info("Sample collection metadata saved to ${params.outdir}/sample_collection_metadata.csv")
+                }
+            
+            outdatasetmeta
+                .collectFile(
+                    name: 'dataset_collection_metadata.csv',
+                    storeDir: params.outdir,
+                    newLine: true,
+                    seed: "study_accession_number,irodspath"
+                ) { meta, irodspath -> 
+                    "${meta.study_accession_number},${irodspath}"
+                }
+                .subscribe { __ -> 
+                        log.info("Dataset collection metadata saved to ${params.outdir}/dataset_collection_metadata.csv")
+                    }
         }
     }
 
@@ -218,8 +287,6 @@ workflow {
     localreports = validatelocal.map { meta, path -> meta + [path: path] }
     irodsreports = validateirods.map { meta, path -> meta + [path: path] }
     metadata     = metadata.mix(outmetadata).map { meta, path -> meta + [path: path] }
-    outdatasetmetadata = outdatasetmeta.map { meta, irodspath -> meta + [irodspath: irodspath] }
-    outsamplemetadata = outsamplemeta.map { meta, irodspath -> meta + [irodspath: irodspath] }
 }
 
 output {
@@ -249,23 +316,5 @@ output {
             sep ','
         }
         path { meta -> "metadata/${meta.id}" }
-    }
-    outdatasetmetadata {
-        label "metadata"
-        index {
-            path "datasetmeta.csv"
-            header true
-            sep ','
-        }
-        path { _meta -> null }
-    }
-    outsamplemetadata {
-        label "metadata"
-        index {
-            path "samplemeta.csv"
-            header true
-            sep ','
-        }
-        path { _meta -> null }
     }
 }
