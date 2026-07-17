@@ -29,7 +29,7 @@ process IRODS_ATTACHCOLLECTIONMETA {
     # Create tsv file with metadata
     echo -e "$meta_tsv" > metadata.tsv
 
-    # Create collection in iRODS if it doesn't exist
+    # Create collection on iRODS if it doesn't exist
     if [[ "${task.ext.create_if_not_exists}" == 'true' ]]; then
         imkdir -p -V "$irodspath"
     fi
