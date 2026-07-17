@@ -23,6 +23,10 @@ input:
   - name: irodspath
     type: string
     description: iRODS collection path to list, e.g. /archive/cellgeni/myproject
+- - name: irodsconfig
+    type: file
+    description: Path to irods_environment.json used to connect to iRODS
+    pattern: '*.json'
 output:
 - - name: meta
     type: map

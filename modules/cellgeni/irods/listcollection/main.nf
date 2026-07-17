@@ -8,6 +8,7 @@ process IRODS_LISTCOLLECTION {
 
     input:
     tuple val(meta), val(irodspath)
+    path irodsconfig
 
     output:
     tuple val(meta), path("output.csv"), emit: csv
@@ -19,6 +20,7 @@ process IRODS_LISTCOLLECTION {
     listcollection.py \\
         ${irodspath} \\
         -o output.csv \\
+        --env-file ${irodsconfig} \\
         ${args}
     
     cat <<-END_VERSIONS > versions.yml
