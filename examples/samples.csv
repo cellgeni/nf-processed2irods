@@ -1,7 +1,6 @@
 id,path,dataset_id
-ERS4938437,/lustre/scratch127/cellgen/cellgeni/aljes/reprocessing/datasets/PRJEB38994/ERS4938437,PRJEB38994
-ERS4938438,/lustre/scratch127/cellgen/cellgeni/aljes/reprocessing/datasets/PRJEB38994/ERS4938438,PRJEB38994
-ERS4938439,/lustre/scratch127/cellgen/cellgeni/aljes/reprocessing/datasets/PRJEB38994/ERS4938439,PRJEB38994
-ERS4938440,/lustre/scratch127/cellgen/cellgeni/aljes/reprocessing/datasets/PRJEB38994/ERS4938440,PRJEB38994
-lolkek1,/lustre/scratch127/cellgen/cellgeni/aljes/reprocessing/datasets/PRJEB38994/ERS4938437
-lolkek2,/lustre/scratch127/cellgen/cellgeni/aljes/reprocessing/datasets/PRJEB38994/ERS4938438
+GSM5833524,/lustre/scratch124/cellgen/cellgeni/aljes/nf-reprocessing-public-10x/results/starsolo/GSE194328/GSM5833524,GSE194328
+GSM5833525,/lustre/scratch124/cellgen/cellgeni/aljes/nf-reprocessing-public-10x/results/starsolo/GSE194328/GSM5833525,GSE194328
+GSM5833526,/lustre/scratch124/cellgen/cellgeni/aljes/nf-reprocessing-public-10x/results/starsolo/GSE194328/GSM5833526,GSE194328
+GSM5833527,/lustre/scratch124/cellgen/cellgeni/aljes/nf-reprocessing-public-10x/results/starsolo/GSE194328/GSM5833527,GSE194328
+GSM4160577,/lustre/scratch124/cellgen/cellgeni/aljes/nf-reprocessing-public-10x/results/starsolo/GSE140393/GSM4160577,GSE140393
