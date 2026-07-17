@@ -27,7 +27,6 @@ process REPROCESS10X_AGGREGATEMETA {
     """
     aggregate_metadata.py \\
         ${metafiles} \\
-        --qc-suffix "${suffix}" \\
         --out-csv "${prefix}.metadata.csv" \\
         --out-json "${prefix}.metadata.json" \\
         ${args}
