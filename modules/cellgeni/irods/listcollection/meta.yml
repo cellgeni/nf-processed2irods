@@ -1,0 +1,45 @@
+$schema: https://raw.githubusercontent.com/nextflow-io/schemas/refs/heads/main/module/v1/schema.json
+name: cellgeni/irods/listcollection
+version: 0.0.1
+description: List the contents of an iRODS collection and write results to a CSV file.
+keywords:
+- iRODS
+- data management
+- collection
+license: MIT
+tools:
+- python-irodsclient:
+    description: Python client library for iRODS (Integrated Rule-Oriented Data System).
+    homepage: https://github.com/irods/python-irodsclient
+    documentation: https://github.com/irods/python-irodsclient
+    license:
+    - BSD-3-Clause
+input:
+- - name: meta
+    type: map
+    description: |
+      Groovy Map containing sample information
+      e.g. [ id:'test' ]
+  - name: irodspath
+    type: string
+    description: iRODS collection path to list, e.g. /archive/cellgeni/myproject
+output:
+- - name: meta
+    type: map
+    description: |
+      Groovy Map containing sample information
+      e.g. [ id:'test' ]
+  - name: csv
+    type: file
+    description: CSV file listing the collection contents (type, path, size, checksum)
+    pattern: '*.csv'
+- name: versions
+  type: file
+  description: YAML file containing software versions used
+  pattern: versions.yml
+  ontologies:
+  - edam: http://edamontology.org/format_3750
+authors:
+- '@claptar'
+maintainers:
+- 'claptar'

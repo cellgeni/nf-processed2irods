@@ -4,6 +4,7 @@ include { REPROCESS10X_AGGREGATEMETA } from './modules/local/reprocess10x/aggreg
 include { REPROCESS10X_VALIDATEIRODS } from './modules/local/reprocess10x/validateirods'
 include { IRODS_ATTACHCOLLECTIONMETA } from './modules/local/irods/attachcollectionmeta'
 include { IRODS_STOREFILE } from './modules/local/irods/storefile'
+include { IRODS_LISTCOLLECTION } from 'cellgeni/irods/listcollection'
 include { FETCH10XMETA } from 'cellgeni/fetch10xmeta'
 include { STARSOLOQC } from 'cellgeni/starsoloqc'
 
@@ -13,6 +14,14 @@ def checkIfPublic(series) {
 
 def ignoreExt(path, ignore_ext) {
     return !ignore_ext.any { ext -> path.name.contains(ext) }
+}
+
+// Parse the CSV emitted by IRODS_LISTCOLLECTION (columns: type,path,size,checksum)
+// and return the basenames of its immediate sub-collections.
+def subcollectionNames(csv) {
+    return csv.splitCsv(header: true)
+        .findAll { row -> row.type == 'collection' }
+        .collect { row -> row.path.replaceAll('/$', '').tokenize('/').last() }
 }
 
 workflow {
@@ -36,6 +45,7 @@ workflow {
     samples             = params.samples && !params.validatecollections ? channel.fromPath(params.samples, checkIfExists: true) : channel.empty()
     irodsconfig         = params.irodsconfig ? channel.value(file(params.irodsconfig, type: 'file', checkIfExists: true)) : channel.empty()
     validatecollections = params.validatecollections ? channel.fromPath(params.validatecollections, checkIfExists: true) : channel.empty()
+    
     /////////////// STEP 0: INPUTS ///////////////////////
     samples = samples
         .splitCsv(header: true, sep: ',')
@@ -57,21 +67,44 @@ workflow {
     versions = versions.mix(REPROCESS10X_VALIDATELOCAL.out.versions.first())
 
     if (!params.validate_local_only) {
-        /////////////// STEP 1.2: CHECK THAT SAMPLES ARE NOT ON IRODS ///////////////////////
+        /////////////// STEP 1.2: LIST WHAT ALREADY EXISTS ON iRODS ///////////////////////
+        // List each dataset's iRODS collection once, on the executor rather than
+        // blocking the head node with synchronous `ils`. Datasets whose collection
+        // does not exist yet exit 2 and are dropped by the process errorStrategy, so
+        // we re-join the listing against the full dataset channel with an empty
+        // listing as the default (remainder: true).
+        IRODS_LISTCOLLECTION(
+            REPROCESS10X_VALIDATELOCAL.out.dataset.map { meta, _pathlist ->
+                tuple(meta, "${params.irodsbase}/${meta.id}".toString())
+            }
+        )
+        versions = versions.mix(IRODS_LISTCOLLECTION.out.versions.first())
+
+        // meta.id (dataset) -> list of sample sub-collections already on iRODS
+        datasetUploaded = REPROCESS10X_VALIDATELOCAL.out.dataset
+            .map { meta, _pathlist -> tuple(meta.id, meta) }
+            .join(
+                IRODS_LISTCOLLECTION.out.csv.map { meta, csv -> tuple(meta.id, subcollectionNames(csv)) },
+                remainder: true
+            )
+            .map { _id, meta, uploaded -> tuple(meta, uploaded ?: []) }
+
+        // Abort if any requested sample already exists on iRODS.
         samples
-            .filter { meta, _path -> 
-                def collection = "${params.irodsbase}/${meta.dataset_id}/${meta.id}".toString()
-                def exists = ["ils", collection].execute()
-                exists.waitFor()
-                exists.exitValue() == 0
+            .map { meta, _path -> tuple(meta.dataset_id, meta) }
+            .combine(
+                datasetUploaded.map { meta, uploaded -> tuple(meta.id, uploaded) },
+                by: 0
+            )
+            .filter { _dataset_id, meta, uploaded -> meta.id in uploaded }
+            .map { _dataset_id, meta, _uploaded ->
+                log.warn("Sample ${meta.id} from dataset ${meta.dataset_id} already exists on iRODS.")
+                meta
             }
-            .view { meta, _path ->
-                log.warn("Sample ${meta.id} from dataset ${meta.dataset_id} already exists on iRODS. Exiting...")
-            }
-            .collect()
-            .subscribe { irodscollected -> 
-                if (irodscollected.size() > 0) {
-                    error("One or more samples already exist on iRODS. Exiting...")
+            .collect(flat: false)
+            .subscribe { existing ->
+                if (existing.size() > 0) {
+                    error("${existing.size()} sample(s) already exist on iRODS. Exiting...")
                 }
             }
 
@@ -81,12 +114,11 @@ workflow {
             .map { meta, pathlist ->
                 def paths = pathlist instanceof List ? pathlist : [pathlist] // ensure pathlist is a list
                 def processedsamples = paths.findAll { it -> it.isDirectory() }.collect { it -> it.baseName }
-                def proc = ["ils", "${params.irodsbase}/${meta.id}".toString()].execute() // check if the dataset already exists on iRODS
-                proc.waitFor()
-                def uploadedsamples = proc.exitValue() == 0 ?
-                    proc.in.text.readLines().findAll { it -> it.trim().startsWith('C- ') }.collect { it -> it.trim().split('/')[-1] } :
-                    []
-                tuple(meta, (processedsamples + uploadedsamples).unique().sort().join(','))
+                tuple(meta.id, meta, processedsamples)
+            }
+            .join(datasetUploaded.map { meta, uploaded -> tuple(meta.id, uploaded) })
+            .map { _id, meta, processedsamples, uploaded ->
+                tuple(meta, (processedsamples + uploaded).unique().sort().join(','))
             }
         FETCH10XMETA(public_datasets)
         versions = versions.mix(FETCH10XMETA.out.versions.first())
@@ -98,14 +130,12 @@ workflow {
         )
 
         ////////////// STEP 3.1: DOWNLOAD BARCODES AND LOGS FOR PROCESSED SAMPLES ////////////////////////
-        processedsamples = REPROCESS10X_VALIDATELOCAL.out.dataset
-            .flatMap { meta, _pathlist ->
-                def proc = ["ils", "${params.irodsbase}/${meta.id}".toString()].execute() // check if the dataset already exists on iRODS
-                proc.waitFor()
-                def uploadedsamples = proc.exitValue() == 0 ?
-                    proc.in.text.readLines().findAll { it -> it.trim().startsWith('C- ') }.collect { it -> it.trim().substring(3).trim() } :
-                    []
-                uploadedsamples.collect { irodspath -> [[id: irodspath.split('/')[-1], dataset_id: meta.id], irodspath] }
+        processedsamples = datasetUploaded
+            .flatMap { meta, uploaded ->
+                uploaded.collect { sample ->
+                    def irodspath = "${params.irodsbase}/${meta.id}/${sample}"
+                    tuple([id: sample, dataset_id: meta.id], irodspath)
+                }
             }
 
         REPROCESS10X_IRODSBARCODESANDLOGS(processedsamples)
