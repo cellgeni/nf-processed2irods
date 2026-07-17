@@ -8,6 +8,60 @@ include { IRODS_LISTCOLLECTION } from 'cellgeni/irods/listcollection'
 include { FETCH10XMETA } from 'cellgeni/fetch10xmeta'
 include { STARSOLOQC } from 'cellgeni/starsoloqc'
 
+// HELP MESSAGE
+def helpMessage() {
+    log.info"""
+    =============================
+    Store Processed Data to iRODS
+    =============================
+    This pipeline validates locally reprocessed 10x samples, fetches public metadata,
+    runs STARsolo QC, uploads the data to iRODS and attaches collection metadata.
+
+    Usage: nextflow run main.nf [OPTIONS]
+
+    Required (one of):
+        --samples             Path to a CSV file of samples to process and upload.
+                              Columns: id,path,dataset_id
+        --validatecollections Path to a CSV file of already-uploaded collections to
+                              validate. Columns: study_accession_number,irodspath
+                              (validation-only mode; cannot be combined with --samples)
+
+    Optional:
+        --outdir              Directory to save results (default: results).
+        --irodsbase           Base iRODS collection for uploads
+                              (default: /archive/cellgeni/datasets).
+        --irodsconfig         Path to irods_environment.json used to connect to iRODS
+                              (default: \$HOME/.irods/irods_environment.json).
+        --validate_local_only Only run local validation, then stop (default: false).
+        --collect_metadata    Fetch/aggregate metadata but skip the iRODS upload
+                              (default: false).
+        --ignore_pattern      Comma-separated file patterns to skip during upload
+                              (default: ${params.ignore_pattern}).
+        --qc_suffix           Suffix of the STARsolo QC files (default: solo_qc).
+        --no_contamination_check  Skip the STARsolo contamination check (default: false).
+        --no_exit_local       Do not exit on local validation errors (default: false).
+        --help                Show this help message and exit.
+
+    Examples:
+        # Process and upload samples
+        nextflow run main.nf --samples examples/samples.csv -resume
+
+        # Validate collections already on iRODS
+        nextflow run main.nf --validatecollections examples/dataset_collection_metadata.csv -resume
+
+    == samples.csv format ==
+    id,path,dataset_id
+    GSM5833524,/path/to/starsolo/GSE194328/GSM5833524,GSE194328
+    GSM5833525,/path/to/starsolo/GSE194328/GSM5833525,GSE194328
+    ========================
+
+    == validatecollections.csv format ==
+    study_accession_number,irodspath
+    GSE194328,/archive/cellgeni/datasets/GSE194328
+    =====================================
+    """.stripIndent()
+}
+
 def checkIfPublic(series) {
     return (series ==~ /GSE\d+/) || (series ==~ /E-MTAB-\d+/) || (series ==~ /PRJ.{0,3}\d+/)
 }
@@ -26,6 +80,33 @@ def subcollectionNames(csv) {
 
 workflow {
     main:
+    /////////////// PARAMETER VALIDATION ////////////////////////
+    // Show help and exit (exit 0 for --help, exit 1 when no input was given).
+    if (params.help || (!params.samples && !params.validatecollections)) {
+        helpMessage()
+        System.exit(params.help ? 0 : 1)
+    }
+
+    // --samples and --validatecollections are mutually exclusive.
+    if (params.samples && params.validatecollections) {
+        log.error("--samples and --validatecollections cannot be used together. Provide only one.")
+        System.exit(1)
+    }
+
+    // --validatecollections is a standalone validation mode; the processing/upload
+    // flags do not apply to it.
+    if (params.validatecollections && (params.validate_local_only || params.collect_metadata)) {
+        log.error("--validate_local_only and --collect_metadata cannot be combined with --validatecollections.")
+        System.exit(1)
+    }
+
+    // Steps that talk to iRODS need a readable irods_environment.json.
+    def needsIrods = params.validatecollections || (params.samples && !params.validate_local_only)
+    if (needsIrods && (!params.irodsconfig || !file(params.irodsconfig).exists())) {
+        log.error("iRODS access is required but --irodsconfig '${params.irodsconfig}' does not exist. Run `iinit` or pass --irodsconfig.")
+        System.exit(1)
+    }
+
     /////////////// PARAMETER INITIALIZATION ////////////////////////
     def ignore_ext = params.ignore_pattern ? params.ignore_pattern.split(',').collect { ext -> ext.trim() }.findAll { ext -> ext } : []
     def sampleMetaColumns = [
@@ -76,7 +157,8 @@ workflow {
         IRODS_LISTCOLLECTION(
             REPROCESS10X_VALIDATELOCAL.out.dataset.map { meta, _pathlist ->
                 tuple(meta, "${params.irodsbase}/${meta.id}".toString())
-            }
+            },
+            irodsconfig
         )
         versions = versions.mix(IRODS_LISTCOLLECTION.out.versions.first())
 

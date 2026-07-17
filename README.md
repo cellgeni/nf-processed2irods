@@ -1,316 +1,169 @@
-# nf-processed2i## Pipeline Workflow
+# nf-processed2irods
 
-1. **Dataset/Sample Discovery** - Reads dataset or sample information from CSV input file
-2. **Public Dataset Detection** - Identifies public datasets (GSE*, E-MTAB-*, PRJEB* patterns) 
-3. **Metadata Parsing** - Extracts metadata from public repositories for public datasets
-4. **Quality Control** - Generates mapping QC statistics from STARsolo output (if not already present)
-5. **File Collection** - Gathers all data files and metadata files for upload
-6. **iRODS Upload** - Transfers files to iRODS with checksums
-7. **Metadata Attachment** - Attaches comprehensive metadata to iRODS collections
+A Nextflow pipeline that takes locally reprocessed single-cell (10x/STARsolo) samples, validates them, enriches them with public metadata, runs QC, and uploads the data — with attached metadata — to [iRODS](https://irods.org/) for long-term storage.
 
-## Dry Run Mode
-
-The pipeline supports a dry run mode (`--dry_run true`) that allows you to test and validate your pipeline configuration without actually uploading data to iRODS. This is particularly useful for:
-
-### What Dry Run Does:
-- **Validates input parameters** - Checks that all required parameters are provided and correctly formatted
-- **Processes metadata** - Runs all metadata collection and parsing steps
-- **Generates QC reports** - Creates mapping statistics and quality control files
-- **Creates output files** - Generates `sample_metadata.csv` and `dataset_metadata.csv` files locally
-- **Shows intended operations** - Displays what files would be uploaded and where
-
-### What Dry Run Skips:
-- **iRODS file uploads** - No files are actually transferred to iRODS storage
-- **iRODS metadata attachment** - No metadata is attached to iRODS collections
-- **MD5 checksum validation** - No checksums are computed or compared with iRODS
+It is the companion "upload" step to [nf-reprocessing-public-10x](https://github.com/cellgeni/nf-reprocessing-public-10x): that pipeline produces the STARsolo output locally, this one stores it on iRODS.
 
 ## Overview
 
-This pipeline processes datasets containing single-cell RNA sequencing results (typically from STARsolo/CellRanger), extracts metadata, performs quality control analysis, and uploads the data with comprehensive metadata to iRODS for long-term storage and data management.
+Given a CSV of samples on local disk, the pipeline:
 
-## Contents of Repo:
-* `main.nf` — the main Nextflow pipeline that orchestrates data processing and iRODS upload
-* `nextflow.config` — configuration script for IBM LSF submission on Sanger's HPC with Singularity containers and global parameters
-* `modules/local/reprocess10x/parsemetadata/` — module for parsing metadata from public repositories (GEO, ENA)
-* `modules/local/reprocess10x/mappingqc/` — module for extracting mapping quality control statistics
-* `modules/local/irods/storefile/` — module for uploading files to iRODS
-* `modules/local/irods/attachcollectionmeta/` — module for attaching metadata to iRODS collections
+1. **Validates** each sample directory locally (`REPROCESS10X_VALIDATELOCAL`).
+2. **Lists iRODS** to find what already exists, and aborts if any requested sample is already uploaded (`IRODS_LISTCOLLECTION`).
+3. **Fetches public metadata** for public datasets — GEO (`GSE*`), ArrayExpress (`E-MTAB-*`), or ENA/SRA BioProjects (`PRJ*`) (`FETCH10XMETA`).
+4. **Downloads barcodes/logs** for samples already present on iRODS so they can be QC'd alongside the new ones (`REPROCESS10X_IRODSBARCODESANDLOGS`).
+5. **Runs STARsolo QC** and collects mapping statistics (`STARSOLOQC`).
+6. **Aggregates metadata** into one per-sample CSV and JSON per dataset (`REPROCESS10X_AGGREGATEMETA`).
+7. **Uploads** each sample's files to iRODS with MD5 verification (`IRODS_STOREFILE`).
+8. **Attaches metadata** to the iRODS sample and dataset collections (`IRODS_ATTACHCOLLECTIONMETA`).
+9. **Validates the uploaded collections** on iRODS (`REPROCESS10X_VALIDATEIRODS`).
 
-## Pipeline Workflow
+## Quick start
 
-1. **Dataset Discovery**: Reads dataset information from CSV input file
-2. **Public Dataset Detection**: Identifies public datasets (GSE*, E-MTAB-*, PRJEB* patterns) 
-3. **Metadata Parsing**: Extracts metadata from public repositories for public datasets
-4. **Quality Control**: Generates mapping QC statistics from STARsolo output (if not already present)
-5. **File Collection**: Gathers all data files and metadata files for upload
-6. **iRODS Upload**: Transfers files to iRODS with checksums
-7. **Metadata Attachment**: Attaches comprehensive metadata to iRODS collections
-
-## Examples
-
-### Basic Usage with Datasets
-Upload processed datasets to iRODS:
 ```bash
-nextflow run main.nf \
-    --datasets datasets.csv \
-    --irodspath "/archive/cellgeni/sanger/"
+# Ensure your iRODS session is initialised first
+iinit
+
+nextflow run main.nf --samples examples/samples.csv -resume
 ```
 
-### Basic Usage with Individual Samples
-Upload individual samples to iRODS:
-```bash
-nextflow run main.nf \
-    --samples samples.csv \
-    --irodspath "/archive/cellgeni/sanger/"
-```
+See `nextflow run main.nf --help` for the full option list.
 
-### Custom File Filtering
-Specify which file types to ignore during upload:
-```bash
-nextflow run main.nf \
-    --datasets datasets.csv \
-    --irodspath "/archive/cellgeni/sanger/" \
-    --ignore_pattern ".bam,.fastq.gz"
-```
+There is a ready-made launcher in [`examples/RESUME`](examples/RESUME) — edit the `samples` path and run it.
 
-### Disable Public Metadata Collection
-Skip automatic metadata retrieval for public datasets:
-```bash
-nextflow run main.nf \
-    --datasets datasets.csv \
-    --irodspath "/archive/cellgeni/sanger/" \
-    --collect_public_metadata false
-```
+## Input
 
-### Enable Verbose Output
-Get detailed logging information:
-```bash
-nextflow run main.nf \
-    --datasets datasets.csv \
-    --irodspath "/archive/cellgeni/sanger/" \
-    --verbose true
-```
+### `--samples` — samples to process and upload
 
-### Custom Output Directory
-Specify a different output directory:
-```bash
-nextflow run main.nf \
-    --datasets datasets.csv \
-    --irodspath "/archive/cellgeni/sanger/" \
-    --output_dir "my_results"
-```
-
-### Dry Run (Test Mode)
-Test the pipeline without actually uploading files to iRODS:
-```bash
-nextflow run main.nf \
-    --datasets datasets.csv \
-    --irodspath "/archive/cellgeni/sanger/" \
-    --dry_run true
-```
-
-This mode will:
-- Validate all input parameters and files
-- Process metadata and generate QC reports
-- Show what would be uploaded without actual iRODS operations
-- Create local output files (metadata CSV files) for review
-
-## Pipeline Parameters
-
-### Required Parameters:
-* `--datasets` — Path to a CSV file containing dataset information with columns: `id` (dataset identifier) and `path` (local filesystem path to processed data directory)
-  **OR**
-* `--samples` — Path to a CSV file containing sample information with columns: `id` (sample identifier), `path` (local filesystem path), and optionally `dataset_id`
-* `--irodspath` — Base path in iRODS where datasets will be stored (e.g., "/archive/cellgeni/sanger/")
-
-### Optional Parameters:
-* `--output_dir` — Output directory for pipeline results (`default: "results"`)
-* `--publish_mode` — File publishing mode (`default: "copy"`)
-* `--ignore_pattern` — Comma-separated list of file patterns to ignore during upload (`default: ".bam,.bai,.cram,.crai,.fastq.gz,.fq.gz,.fastq,.fq,.mate1.bz2,.mate2.bz2,.sh,.bsub,.pl"`)
-* `--collect_public_metadata` — Collect metadata from public repositories for public datasets (`default: true`)
-* `--parse_mapper_metrics` — Parse mapping QC metrics from STARsolo output (`default: true`)
-* `--verbose` — Enable verbose output (`default: false`)
-* `--dry_run` — Perform a dry run without uploading files to iRODS (`default: false`)
-
-## Input File Format
-
-The pipeline supports two input modes:
-
-### Option 1: Dataset-based input (`--datasets`)
-CSV file with the following structure:
-
-```csv
-id,path
-GSE123456,/path/to/processed/GSE123456
-PRJEB12345,/path/to/processed/PRJEB12345
-EGA_DATASET,/path/to/processed/EGA_DATASET
-```
-
-Where:
-- `id`: Unique dataset identifier (can be GEO accession, ENA project, or custom ID)
-- `path`: Absolute path to the directory containing processed single-cell data with sample subdirectories
-
-### Option 2: Sample-based input (`--samples`)
-CSV file with the following structure:
+CSV with a header and three columns:
 
 ```csv
 id,path,dataset_id
-SAMPLE1,/path/to/processed/SAMPLE1,GSE123456
-SAMPLE2,/path/to/processed/SAMPLE2,GSE123456
-SAMPLE3,/path/to/processed/SAMPLE3,
+GSM5833524,/path/to/starsolo/GSE194328/GSM5833524,GSE194328
+GSM5833525,/path/to/starsolo/GSE194328/GSM5833525,GSE194328
 ```
 
-Where:
-- `id`: Unique sample identifier 
-- `path`: Absolute path to the sample directory containing processed single-cell data
-- `dataset_id`: (Optional) Dataset identifier to group samples under. If omitted, samples will be uploaded directly to irodspath/id
+| Column | Description |
+|---|---|
+| `id` | Sample identifier (becomes the sample sub-collection name on iRODS). |
+| `path` | Absolute path to the sample's STARsolo output directory. |
+| `dataset_id` | Dataset the sample belongs to (groups samples under one collection). |
 
-## iRODS Path Structure
+Each sample is uploaded to `<irodsbase>/<dataset_id>/<id>`.
 
-The pipeline uploads data to different iRODS paths depending on the input type:
+### `--validatecollections` — validation-only mode
 
-- **Datasets (`--datasets`)**: Uploaded to `irodspath/id`
-  - Example: `/archive/cellgeni/sanger/GSE123456/`
-  
-- **Samples with dataset_id (`--samples`)**: Uploaded to `irodspath/dataset_id/id`
-  - Example: `/archive/cellgeni/sanger/GSE123456/SAMPLE1/`
-  
-- **Samples without dataset_id (`--samples`)**: Uploaded to `irodspath/id`
-  - Example: `/archive/cellgeni/sanger/SAMPLE1/`
+To validate collections that are **already** on iRODS (without processing or uploading anything), pass a CSV of collections instead of `--samples`:
 
-## Expected Data Structure
-
-### For Dataset-based Input
-Each dataset directory should contain:
-- **Sample directories**: Named with sample identifiers containing STARsolo output files
-- **QC files**: `*solo_qc.tsv` files (generated automatically if missing)
-- **Metadata files**: For public datasets, metadata will be automatically retrieved
-
-Example directory structure:
-```
-GSE123456/
-├── SAMPLE1/
-│   ├── Aligned.sortedByCoord.out.bam
-│   ├── Log.final.out
-│   ├── Solo.out/
-│   └── ...
-├── SAMPLE2/
-│   └── ...
-└── GSE123456_solo_qc.tsv
+```csv
+study_accession_number,irodspath
+GSE194328,/archive/cellgeni/datasets/GSE194328
+GSE140393,/archive/cellgeni/datasets/GSE140393
 ```
 
-### For Sample-based Input
-Each sample directory should contain STARsolo output files:
+`--samples` and `--validatecollections` are mutually exclusive.
+
+## Parameters
+
+### Input (one is required)
+
+| Parameter | Default | Description |
+|---|---|---|
+| `--samples` | `null` | CSV of samples to process and upload (`id,path,dataset_id`). |
+| `--validatecollections` | `null` | CSV of already-uploaded collections to validate (`study_accession_number,irodspath`). Validation-only mode. |
+
+### iRODS
+
+| Parameter | Default | Description |
+|---|---|---|
+| `--irodsbase` | `/archive/cellgeni/datasets` | Base iRODS collection for uploads. |
+| `--irodsconfig` | `$HOME/.irods/irods_environment.json` | iRODS environment file used to connect. |
+
+### Run modes
+
+| Parameter | Default | Description |
+|---|---|---|
+| `--validate_local_only` | `false` | Run only local validation, then stop. |
+| `--collect_metadata` | `false` | Fetch and aggregate metadata but skip the iRODS upload. |
+
+### Processing / output
+
+| Parameter | Default | Description |
+|---|---|---|
+| `--ignore_pattern` | `.bam,.bai,.cram,.crai,.fastq.gz,.fq.gz,.fastq,.fq,.sh,.bsub,.pl` | Comma-separated file patterns to skip during upload. |
+| `--qc_suffix` | `solo_qc` | Suffix of the STARsolo QC files. |
+| `--no_contamination_check` | `false` | Skip the STARsolo contamination check. |
+| `--no_exit_local` | `false` | Do not exit on local validation errors. |
+| `--outdir` | `results` | Directory for pipeline output files and reports. |
+| `--help` | `false` | Show the help message and exit. |
+
+## Outputs
+
+Written under `--outdir` (default `results/`):
+
+| File | Description |
+|---|---|
+| `mapping_qc_stats.tsv` | Per-sample STARsolo mapping QC statistics. |
+| `sample_metadata.csv` | Aggregated per-sample metadata. |
+| `sample_collection_metadata.csv` | Per-sample metadata plus the iRODS path it was attached to. |
+| `dataset_collection_metadata.csv` | Per-dataset iRODS collection paths. |
+| `md5sums.tsv` | Local vs. iRODS MD5 checksums for every uploaded file. |
+| `localreports.txt` | Local validation reports. |
+| `irodsreports.txt` | iRODS collection validation reports — **check this for errors/warnings.** |
+| `versions.yml` | Software versions used. |
+
+On iRODS, data is organised as:
+
 ```
-SAMPLE1/
-├── Aligned.sortedByCoord.out.bam
-├── Log.final.out
-├── Solo.out/
-│   ├── Gene/
-│   ├── GeneFull/
-│   └── ...
-└── ...
-```
-
-## Metadata Handling
-
-### Public Datasets
-For datasets matching patterns `GSE*`, `E-MTAB-*`, or `PRJEB*`, the pipeline automatically:
-- Retrieves sample metadata from public repositories
-- Generates accession mapping files
-- Creates sample relationship files
-- Downloads study metadata
-
-### All Datasets
-The pipeline extracts and stores:
-- **Sample-level metadata**: Species, sequencing type (paired/single), strand information, read counts, whitelist version
-- **Dataset-level metadata**: Study accession numbers, dataset identifiers
-- **Technical metadata**: File checksums, upload timestamps
-
-## iRODS Structure
-
-Data is organized in iRODS based on the input type:
-
-### For Dataset-based Input (`--datasets`)
-```
-/archive/cellgeni/sanger/
-├── GSE123456/                    # Dataset uploaded to irodspath/id
-│   ├── SAMPLE1/                  # Individual samples within dataset
-│   │   ├── [STARsolo output files]
-│   │   └── [metadata attached to collection]
-│   ├── SAMPLE2/
-│   └── [dataset metadata files]
-└── PRJEB12345/                   # Another dataset
+<irodsbase>/
+└── <dataset_id>/            # dataset collection (metadata attached)
+    ├── <sample_id>/         # sample collection (metadata attached)
+    │   └── [STARsolo output files]
     └── ...
 ```
 
-### For Sample-based Input (`--samples`)
-**With dataset_id specified:**
-```
-/archive/cellgeni/sanger/
-├── GSE123456/                    # Dataset ID from CSV
-│   ├── SAMPLE1/                  # Sample uploaded to irodspath/dataset_id/id
-│   │   ├── [STARsolo output files]
-│   │   └── [metadata attached to collection]
-│   └── SAMPLE2/
-└── ...
-```
+## Requirements
 
-**Without dataset_id specified:**
-```
-/archive/cellgeni/sanger/
-├── SAMPLE1/                      # Sample uploaded directly to irodspath/id
-│   ├── [STARsolo output files]
-│   └── [metadata attached to collection]
-├── SAMPLE2/
-└── ...
-```
+- **Nextflow** ≥ 26.04.1
+- **Singularity** for containerised execution
+- **LSF** for job scheduling (Sanger HPC)
+- An initialised **iRODS** session (`iinit`) with `~/.irods/irods_environment.json`
+- Access to the `/lustre` and `/nfs` filesystems
 
-## System Requirements
+The pipeline is configured for Sanger's HPC: an LSF executor, Singularity images from `/nfs/cellgeni/singularity/images/`, and bind mounts for `/lustre`, `/nfs` and `/etc/ssl`.
 
-- **Nextflow**: Version 25.04.4 or higher
-- **Singularity**: For containerized execution
-- **LSF**: For job scheduling on HPC
-- **iRODS**: Client tools for data upload
-- **Storage**: Sufficient space in `/lustre` and `/nfs` mount points
+## Repository layout
 
-## Configuration
-
-The pipeline is configured for Sanger's HPC environment with:
-- LSF executor with per-job memory limits
-- Singularity containers from `/nfs/cellgeni/singularity/images/`
-- Bind mounts for `/lustre` and `/nfs` filesystems
-- Retry strategy with up to 5 attempts per process
+| Path | Description |
+|---|---|
+| `main.nf` | Main workflow: validation, help, and orchestration of all steps. |
+| `nextflow.config` | Sanger HPC / Singularity configuration and default parameters. |
+| `configs/` | Per-process resource and argument configuration. |
+| `modules/local/reprocess10x/` | Local modules: `validatelocal`, `irodsbarcodesandlogs`, `aggregatemeta`, `validateirods`. |
+| `modules/local/irods/` | Local iRODS modules: `storefile`, `attachcollectionmeta`. |
+| `modules/cellgeni/` | Registry modules: `irods/listcollection`, `fetch10xmeta`, `starsoloqc`. |
+| `examples/` | Example input CSVs and the `RESUME` launcher script. |
 
 ## Monitoring
 
-The pipeline generates comprehensive reports:
-- Timeline report: `reports/YYYYMMDD-HH-mm-ss_timeline.html`
-- Execution report: `reports/YYYYMMDD-HH-mm-ss_report.html`
-- Trace file: `reports/YYYYMMDD-HH-mm-ss_trace.tsv`
+Execution reports are written to `reports/` with a timestamped suffix:
 
-## Pipeline Outputs
-
-- **iRODS Collections**: Organized dataset collections with attached metadata
-- **QC Reports**: Mapping statistics and quality metrics
-- **Metadata Files**: Comprehensive sample and dataset annotations
-- **Upload Logs**: Records of transferred files with checksums
+- `reports/execution_timeline_<timestamp>.html`
+- `reports/execution_report_<timestamp>.html`
+- `reports/execution_trace_<timestamp>.txt`
+- `reports/pipeline_dag_<timestamp>.html`
 
 ## Troubleshooting
 
-### Common Issues:
-1. **Missing QC files**: The pipeline will generate them automatically
-2. **iRODS connection**: Ensure iRODS client is properly configured
-3. **File permissions**: Check read access to input directories
-4. **Storage space**: Ensure sufficient space for temporary files
-
-### Log Files:
-Check Nextflow work directory (`nf-work/`) for detailed process logs and error messages.
+- **`--irodsconfig ... does not exist`** — run `iinit` first, or pass `--irodsconfig /path/to/irods_environment.json`.
+- **"sample(s) already exist on iRODS"** — the pipeline refuses to overwrite existing sample collections; remove them from iRODS or drop them from your `--samples` CSV.
+- **iRODS validation warnings** — inspect `results/irodsreports.txt`.
+- **Detailed process logs** — see the Nextflow work directory (`nf-work/`).
 
 ## Version
 
-Current version: 0.0.1
+Current version: 0.0.2
 
 ## License
 
-See repository for license information.
+See the [LICENSE](LICENSE) file.

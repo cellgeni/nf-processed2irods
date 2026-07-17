@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -euo pipefail
+
+samples="/path/to/samples.csv"
+
+[[ -e "$samples" ]] || (echo "File $samples not found" && false)
+
+nextflow run main.nf \
+    --samples "$samples" \
+    --outdir "results" \
+    -resume
