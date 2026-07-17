@@ -1,6 +1,7 @@
 include { REPROCESS10X_VALIDATELOCAL } from './modules/local/reprocess10x/validatelocal'
 include { REPROCESS10X_IRODSBARCODESANDLOGS } from './modules/local/reprocess10x/irodsbarcodesandlogs'
 include { REPROCESS10X_AGGREGATEMETA } from './modules/local/reprocess10x/aggregatemeta'
+include { REPROCESS10X_VALIDATEIRODS } from './modules/local/reprocess10x/validateirods'
 include { IRODS_ATTACHCOLLECTIONMETA } from './modules/local/irods/attachcollectionmeta'
 include { IRODS_STOREFILE } from './modules/local/irods/storefile'
 include { FETCH10XMETA } from 'cellgeni/fetch10xmeta'
@@ -21,8 +22,8 @@ workflow {
 
     /////////////// INITIALIZE CHANNELS ////////////////////////
     metadata = channel.empty()
-    datasets = params.datasets ? channel.fromPath(params.datasets, checkIfExists: true) : channel.empty()
     samples = params.samples ? channel.fromPath(params.samples, checkIfExists: true) : channel.empty()
+    irodsconfig = channel.value(file(params.irodsconfig, type: 'file', checkIfExists: true))
 
     /////////////// STEP 0: INPUTS ///////////////////////
     samples = samples
@@ -56,27 +57,25 @@ workflow {
     REPROCESS10X_VALIDATELOCAL(datasets)
 
     /////////////// STEP 2: FETCH METADATA ////////////////////////
-    if (params.fetchpublic) {
-        public_datasets = REPROCESS10X_VALIDATELOCAL.out.dataset
-            .filter { meta, _pathlist -> checkIfPublic(meta.id) }
-            .map { meta, pathlist ->
-                def paths = pathlist instanceof List ? pathlist : [pathlist] // ensure pathlist is a list
-                def processedsamples = paths.findAll { it -> it.isDirectory() }.collect { it -> it.baseName }
-                def proc = ["ils", "${params.irodsbase}/${meta.id}".toString()].execute() // check if the dataset already exists on iRODS
-                proc.waitFor()
-                def uploadedsamples = proc.exitValue() == 0 ?
-                    proc.in.text.readLines().findAll { it -> it.trim().startsWith('C- ') }.collect { it -> it.trim().split('/')[-1] } :
-                    []
-                tuple(meta, (processedsamples + uploadedsamples).unique().sort().join(','))
-            }
-        FETCH10XMETA(public_datasets)
-        metadata = metadata.mix(
-            FETCH10XMETA.out.tsv,
-            FETCH10XMETA.out.list,
-            FETCH10XMETA.out.soft,
-            FETCH10XMETA.out.txt
-        )
-    }
+    public_datasets = REPROCESS10X_VALIDATELOCAL.out.dataset
+        .filter { meta, _pathlist -> checkIfPublic(meta.id) }
+        .map { meta, pathlist ->
+            def paths = pathlist instanceof List ? pathlist : [pathlist] // ensure pathlist is a list
+            def processedsamples = paths.findAll { it -> it.isDirectory() }.collect { it -> it.baseName }
+            def proc = ["ils", "${params.irodsbase}/${meta.id}".toString()].execute() // check if the dataset already exists on iRODS
+            proc.waitFor()
+            def uploadedsamples = proc.exitValue() == 0 ?
+                proc.in.text.readLines().findAll { it -> it.trim().startsWith('C- ') }.collect { it -> it.trim().split('/')[-1] } :
+                []
+            tuple(meta, (processedsamples + uploadedsamples).unique().sort().join(','))
+        }
+    FETCH10XMETA(public_datasets)
+    metadata = metadata.mix(
+        FETCH10XMETA.out.tsv,
+        FETCH10XMETA.out.list,
+        FETCH10XMETA.out.soft,
+        FETCH10XMETA.out.txt
+    )
 
     ////////////// STEP 3.1: DOWNLOAD BARCODES AND LOGS FOR PROCESSED SAMPLES ////////////////////////
     processedsamples = REPROCESS10X_VALIDATELOCAL.out.dataset
@@ -92,14 +91,12 @@ workflow {
     REPROCESS10X_IRODSBARCODESANDLOGS(processedsamples)
 
     ////////////// STEP 3.2: RUN STARSOLO QC ////////////////////////
-    if (params.soloqc) {
-        groupedsamples = samples.mix(REPROCESS10X_IRODSBARCODESANDLOGS.out.sample)
-            .map { meta, path -> tuple(meta.dataset_id, meta.id, path) }
-            .groupTuple(sort: 'hash')
-            .map { dataset_id, samplelist, paths -> tuple([id: dataset_id, samples: samplelist], paths) }
-        STARSOLOQC(groupedsamples)
-        metadata = metadata.mix(STARSOLOQC.out.tsv)
-    }
+    groupedsamples = samples.mix(REPROCESS10X_IRODSBARCODESANDLOGS.out.sample)
+        .map { meta, path -> tuple(meta.dataset_id, meta.id, path) }
+        .groupTuple(sort: 'hash')
+        .map { dataset_id, samplelist, paths -> tuple([id: dataset_id, samples: samplelist], paths) }
+    STARSOLOQC(groupedsamples)
+    metadata = metadata.mix(STARSOLOQC.out.tsv)
 
     ////////////// STEP 4: AGGREGATE METADATA PER SAMPLE ////////////////////////
     // Group all metadata files (public fetched + STARsolo QC) per dataset and
@@ -125,7 +122,7 @@ workflow {
             samplefiles.collect { file -> tuple(meta, file, "${irodspath}/${file.toString().replaceFirst(basedir + '/', '')}") }
         }
         .mix(
-            metadata.flatMap { meta, pathlist -> pathlist instanceof List ? pathlist.collect { path -> tuple(meta, path, "${params.irodsbase}/${meta.id}/${path.name}") } : [tuple(meta, pathlist, "${params.irodsbase}/${meta.id}/${pathlist.name}")] }
+            metadata.flatMap { meta, pathlist -> pathlist instanceof List ? pathlist.collect { path -> tuple(meta + [dataset_id: meta.id], path, "${params.irodsbase}/${meta.id}/${path.name}") } : [tuple(meta, pathlist, "${params.irodsbase}/${meta.id}/${pathlist.name}")] }
         )
 
     // Filter files if ignore_pattern is provided
@@ -140,18 +137,35 @@ workflow {
     IRODS_STOREFILE(irodsfiles)
 
     ////////////// STEP 5: ATTACH METADATA ////////////////////////
+    datasetcollections = metadata.map { meta, _pathlist -> tuple([study_accession_number: meta.id], "${params.irodsbase}/${meta.id}") }.unique()
     collectionmeta = samplecollections.map { meta, _path, irodspath -> tuple(meta, irodspath) }
-        .mix(
-            metadata.map { meta, _pathlist -> tuple([study_accession_number: meta.id], "${params.irodsbase}/${meta.id}") }.unique()
-        )
+        .mix(datasetcollections)
         .map { meta, irodspath -> tuple(meta + [id: meta.sample_id], irodspath) }
     // collectionmeta.view { meta, irodspath ->
     //     log.info("Attaching metadata ${meta} to collection ${irodspath}")
     // }
     IRODS_ATTACHCOLLECTIONMETA(collectionmeta)
 
+    ////////////// STEP 6: VALIDATE UPLOADED COLLECTIONS ////////////////////////
+    validatecollections = IRODS_STOREFILE.out.md5
+        .map { meta, _irodspath, _md5, _imd5 -> meta.dataset_id}
+        .unique()
+        .collect()
+        .flatten()
+        .map { dataset_id -> tuple([id: dataset_id], "${params.irodsbase}/${dataset_id}") }
+
+    REPROCESS10X_VALIDATEIRODS(validatecollections, irodsconfig)
+
     /////////////// COLLECT FILES ////////////////////////
     REPROCESS10X_VALIDATELOCAL.out.versions.first()
+        .mix(
+            REPROCESS10X_AGGREGATEMETA.out.versions.first(),
+            STARSOLOQC.out.versions.first(),
+            IRODS_ATTACHCOLLECTIONMETA.out.versions.first(),
+            REPROCESS10X_IRODSBARCODESANDLOGS.out.versions.first(),
+            IRODS_STOREFILE.out.versions.first(),
+            REPROCESS10X_VALIDATEIRODS.out.versions.first(),
+        )
         .splitText(by: 20)
         .unique()
         .collectFile(name: 'versions.yml', storeDir: params.outdir, sort: true)
@@ -161,10 +175,16 @@ workflow {
     
     REPROCESS10X_VALIDATELOCAL.out.txt
         .collectFile(name: 'localreports.txt', storeDir: params.outdir) {_meta, path -> path.getText() }
-        .subscribe { __ -> 
+        .subscribe { __ ->
                 log.info("Local validation reports saved to ${params.outdir}/localreports.txt")
             }
-    
+
+    REPROCESS10X_VALIDATEIRODS.out.txt
+        .collectFile(name: 'irodsreports.txt', storeDir: params.outdir) {_meta, path -> path.getText() }
+        .subscribe { __ ->
+                log.warn("iRODS validation reports saved to ${params.outdir}/irodsreports.txt. Please check the reports for any errors or warnings.")
+            }
+
     IRODS_STOREFILE.out.md5
         .collectFile(name: 'md5sums.tsv', storeDir: params.outdir) {_meta, irodspath, md5, irods_md5 -> "${irodspath}\t${md5}\t${irods_md5}\n" }
         .subscribe { __ ->
@@ -173,6 +193,7 @@ workflow {
     
     publish:
     localreports = REPROCESS10X_VALIDATELOCAL.out.txt.map { meta, path -> meta + [path: path] }
+    irodsreports = REPROCESS10X_VALIDATEIRODS.out.txt.map { meta, path -> meta + [path: path] }
     metadata     = metadata.mix(REPROCESS10X_AGGREGATEMETA.out.csv,REPROCESS10X_AGGREGATEMETA.out.json).map { meta, path -> meta + [path: path] }
 }
 
@@ -185,6 +206,15 @@ output {
             sep ','
         }
         path "localreports"
+    }
+    irodsreports {
+        label "report"
+        index {
+            path "index/irodsreports.csv"
+            header true
+            sep ','
+        }
+        path "irodsreports"
     }
     metadata {
         label "metadata"
