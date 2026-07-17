@@ -9,7 +9,6 @@ def metaToTsv(meta) {
                               .collect { v -> "${key}\t${v}" } // create key-value pairs
                     }
                     .join('\\n')
-                    .stripIndent() // remove leading whitespace
     return tsv_string
 }
 
@@ -23,7 +22,6 @@ process IRODS_ATTACHCOLLECTIONMETA {
     path "versions.yml"           , emit: versions
 
     script:
-    def prefix = task.ext.prefix ?: "${meta.id}"
     def meta_tsv = metaToTsv(meta)
     """
     # Create tsv file with metadata
@@ -57,12 +55,7 @@ process IRODS_ATTACHCOLLECTIONMETA {
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    echo $args
-    
-    touch ${prefix}.bam
-
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         irods: \$(ienv | grep version | awk '{ print \$3 }')

@@ -4,7 +4,6 @@
 
 process FETCH10XMETA {
     tag "${meta.id}"
-    //container "quay.io/cellgeni/starsolo:v4.1"
 
     input:
     tuple val(meta), val(sample_ids)
@@ -42,11 +41,9 @@ process FETCH10XMETA {
     """
 
     stub:
-    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    
-    touch ${prefix}.bam
+    touch links.tsv ${prefix}.sample.list ${prefix}.accessions.tsv
 
     reprocess_version=4.1
     cat <<-END_VERSIONS > versions.yml

@@ -8,7 +8,7 @@ include { FETCH10XMETA } from 'cellgeni/fetch10xmeta'
 include { STARSOLOQC } from 'cellgeni/starsoloqc'
 
 def checkIfPublic(series) {
-    return (series =~ /GSE\d+/) || (series =~ /E-MTAB-\d+/) || (series =~ /PRJ.{0,3}\d+/)
+    return (series ==~ /GSE\d+/) || (series ==~ /E-MTAB-\d+/) || (series ==~ /PRJ.{0,3}\d+/)
 }
 
 def ignoreExt(path, ignore_ext) {
@@ -34,7 +34,7 @@ workflow {
     validateirods       = channel.empty()
     md5sums             = channel.empty()
     samples             = params.samples && !params.validatecollections ? channel.fromPath(params.samples, checkIfExists: true) : channel.empty()
-    irodsconfig         = channel.value(file(params.irodsconfig, type: 'file', checkIfExists: true))
+    irodsconfig         = params.irodsconfig ? channel.value(file(params.irodsconfig, type: 'file', checkIfExists: true)) : channel.empty()
     validatecollections = params.validatecollections ? channel.fromPath(params.validatecollections, checkIfExists: true) : channel.empty()
     /////////////// STEP 0: INPUTS ///////////////////////
     samples = samples
@@ -56,12 +56,12 @@ workflow {
     validatelocal = validatelocal.mix(REPROCESS10X_VALIDATELOCAL.out.txt)
     versions = versions.mix(REPROCESS10X_VALIDATELOCAL.out.versions.first())
 
-    if (!params.validate_local) {
+    if (!params.validate_local_only) {
         /////////////// STEP 1.2: CHECK THAT SAMPLES ARE NOT ON IRODS ///////////////////////
         samples
             .filter { meta, _path -> 
-                def collection = params.irodsbase + "/${meta.dataset_id}/${meta.id}"
-                def exists = "ils ${collection}".execute()
+                def collection = "${params.irodsbase}/${meta.dataset_id}/${meta.id}".toString()
+                def exists = ["ils", collection].execute()
                 exists.waitFor()
                 exists.exitValue() == 0
             }
@@ -187,9 +187,6 @@ workflow {
                     ignoreExt(path, ignore_ext)
                 }
             }
-            // irodsfiles.view { meta, path, irodspath ->
-            //     log.info("Preparing to upload ${path} to iRODS at ${irodspath}")
-            // }
             IRODS_STOREFILE(irodsfiles)
             md5sums = md5sums.mix(IRODS_STOREFILE.out.md5)
             versions = versions.mix(IRODS_STOREFILE.out.versions.first())
@@ -201,9 +198,6 @@ workflow {
             collectionmeta = outsamplemeta
                 .mix(outdatasetmeta)
                 .map { meta, irodspath -> tuple(meta + [id: meta.sample_id], irodspath) }
-            // collectionmeta.view { meta, irodspath ->
-            //     log.info("Attaching metadata ${meta} to collection ${irodspath}")
-            // }
             IRODS_ATTACHCOLLECTIONMETA(collectionmeta)
             versions = versions.mix(IRODS_ATTACHCOLLECTIONMETA.out.versions.first())
 
@@ -250,7 +244,7 @@ workflow {
     }
 
     ////////////// STEP 6: VALIDATE UPLOADED COLLECTIONS ////////////////////////
-    if (params.validatecollections || (!params.validate_local && !params.collect_metadata)) {
+    if (params.validatecollections || (!params.validate_local_only && !params.collect_metadata)) {
         REPROCESS10X_VALIDATEIRODS(validatecollections, irodsconfig)
         validateirods = validateirods.mix(REPROCESS10X_VALIDATEIRODS.out.txt)
         versions = versions.mix(REPROCESS10X_VALIDATEIRODS.out.versions.first())
