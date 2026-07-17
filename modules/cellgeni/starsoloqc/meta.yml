@@ -1,0 +1,45 @@
+---
+name: "cellgeni/starsoloqc"
+description: >
+  Collects QC statistics from STARsolo output directories, producing a merged
+  TSV summary of alignment and cell-calling metrics across all samples in a dataset.
+keywords:
+  - STARsolo
+  - STAR
+  - QC
+  - quality control
+  - single-cell
+  - 10x
+  - RNA-seq
+tools:
+  - starsolo:
+      description: "Wrapper around STAR aligner configured for 10x Chromium single-cell data."
+      homepage: "https://github.com/cellgeni/STARsolo"
+      licence:
+        - "MIT"
+input:
+- - meta:
+      type: "map"
+      description: "Map with dataset-level metadata. Must contain key 'id' with the dataset accession.\ne.g. [ id:'GSE230685' ]\n"
+  - samples:
+      type: "directory"
+      description: "STARsolo per-sample output directories to collect QC metrics from."
+output:
+  tsv:
+  - - meta:
+        type: "map"
+        description: "Map with dataset-level metadata, passed through from input.\ne.g. [ id:'GSE230685' ]\n"
+    - "*.solo_qc.tsv":
+        type: "file"
+        description: "TSV file with merged QC statistics across all STARsolo sample directories."
+        pattern: "*.solo_qc.tsv"
+  versions:
+  - path: "versions.yml"
+    type: "file"
+    description: "YAML file recording the STARsolo wrapper version used by this process."
+authors:
+  - "@claptar"
+maintainers:
+  - "@claptar"
+version: "0.0.1"
+license: "MIT"
