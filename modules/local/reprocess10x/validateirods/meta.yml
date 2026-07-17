@@ -1,0 +1,12 @@
+name: local/irods/validateirods
+version: 1.0.0
+description: A brief description of the local/irods/validateirods module
+license: Apache-2.0
+input:
+  - name: greeting
+    type: string
+    description: A greeting string
+output:
+  - name: stdout
+    type: string
+    description: The greeting message
