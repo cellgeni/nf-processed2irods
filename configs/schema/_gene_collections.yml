@@ -1,0 +1,39 @@
+# _gene_collections.yml
+- name:
+    pattern: '^filtered'
+    min: 1
+    max: 1
+  data_objects:
+    - pattern: '^barcodes\.tsv\.gz$'
+      min: 1
+      max: 1
+    - pattern: '^features\.tsv\.gz$'
+      min: 1
+      max: 1
+    - pattern: '^matrix\.mtx\.gz$'
+      min: 1
+      max: 1
+  collections: []
+  allow_extra_files: false
+  allow_extra_collections: false
+
+- name:
+    pattern: '^raw$'
+    min: 1
+    max: 1
+  data_objects:
+    - pattern: '^barcodes\.tsv\.gz$'
+      min: 1
+      max: 1
+    - pattern: '^features\.tsv\.gz$'
+      min: 1
+      max: 1
+    - pattern: '^matrix\.mtx\.gz$'
+      min: 1
+      max: 1
+    - pattern: '^UniqueAndMult-EM\.mtx\.gz$'
+      min: 0
+      max: 1
+  collections: []
+  allow_extra_files: false
+  allow_extra_collections: false

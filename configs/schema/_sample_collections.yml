@@ -1,0 +1,12 @@
+# _sample_collections.yml
+- name:
+    pattern: '^(SRS|GSM|ERS)\d+$'
+    min: 1
+    max: null
+
+  data_objects: !include _star_alignment_files.yml
+
+  collections: !include _star_output.yml
+
+  allow_extra_files: false
+  allow_extra_collections: false

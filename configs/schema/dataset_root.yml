@@ -1,0 +1,12 @@
+# dataset_root.yml
+name:
+  pattern: '^(?:GSE|E-MTAB-|EGAD|PRJEB|PRJNA|HRA)\d+$'
+
+metadata_keys: []
+
+data_objects: !include _dataset_files.yml
+
+collections: !include _sample_collections.yml
+
+allow_extra_files: false
+allow_extra_collections: false

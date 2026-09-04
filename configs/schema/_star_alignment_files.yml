@@ -1,0 +1,25 @@
+# _star_alignment_files.yml
+- pattern: '^Log\.final\.out$'
+  min: 1
+  max: 1
+
+- pattern: '^Log\.out$'
+  min: 1
+  max: 1
+
+- pattern: '^Log\.progress\.out$'
+  min: 1
+  max: 1
+
+- pattern: '^SJ\.out\.tab$'
+  min: 1
+  max: 1
+
+- pattern: '^strand\.txt$'
+  description: 'Old file that may be present in some datasets'
+  min: 0
+  max: 1
+
+- pattern: '^Unmapped\.out\.mate[12]\.bz2$'
+  min: 2
+  max: 2
