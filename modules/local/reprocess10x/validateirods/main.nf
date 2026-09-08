@@ -1,26 +1,35 @@
+nextflow.enable.types = true
 /*
  * Module: local/irods/validateirods
  */
 
+
 process REPROCESS10X_VALIDATEIRODS {
-    tag "${meta.id}"
-    container 'quay.io/cellgeni/track-reprocessing:0.1.1'
+    tag "${id}"
+    container 'quay.io/cellgeni/track-reprocessing:0.2.0'
 
     input:
-    tuple val(meta), val(irodspath)
-    path irodsconfig
+    tuple(id: String, irodspath: String)
+    schema: Path
+    config: Path?
 
     output:
-    tuple val(meta), path("*.txt"), emit: txt
-    path "versions.yml", emit: versions
+    meta = tuple(id: id, path: irodspath)
+    txt: Path = file("${id}.txt")
+    list: Path = file("extra_files.list")
+
+    topic:
+    tuple('validate-hierarchy', eval('validate-hierarchy --version')) >> 'versions'
 
     script:
     def args = task.ext.args ?: '--no-exit'
+    def irodsconfig = config ?: "~/.irods/irods_environment.json"
     """
-    sample-tracking irods-validate "${irodspath}" --report "${meta.id}.txt" --config-file ${irodsconfig} ${args}
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        sample-tracking: \$(sample-tracking --version | cut -d ' ' -f 2)
-    END_VERSIONS
+    validate-hierarchy irods \\
+        "${irodspath}" \\
+        --schema ${schema} \\
+        --config-file ${irodsconfig} \\
+        --report "${id}.txt" \\
+        --extra-paths-file extra_files.list ${args}
     """
 }
