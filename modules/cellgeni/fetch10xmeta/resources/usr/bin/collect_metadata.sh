@@ -30,6 +30,166 @@ function download_sdrf_idf_files() {
   fi
 }
 
+## derive the sample and biosample lists from the relation table. '-' marks a
+## relation we do not have; it must never reach the lists, both because it is
+## not an ID anyone can look up and because a lone '-' used as a grep -f
+## pattern matches every line of a metadata table.
+function write_sample_lists() {
+  local SERIES=$1
+
+  cut -f 2 $SERIES.sample.relation.list | grep -v '^-$' | grep . > $SERIES.sample.list
+  cut -f 4 $SERIES.sample.relation.list | grep -v '^-$' | grep . > $SERIES.biosample.list
+  return 0
+}
+
+## true when the family file did not give us an SRA experiment and/or a BioSample
+## for every GSM it lists
+function relations_incomplete() {
+  local SERIES=$1
+
+  if [[ ! -s $SERIES.sample.relation.list ]]
+  then
+    return 0
+  fi
+
+  if [[ -s $SERIES.gsm.list && `cat $SERIES.gsm.list | wc -l` -ne `cat $SERIES.sample.relation.list | wc -l` ]]
+  then
+    return 0
+  fi
+
+  cut -f 3,4 $SERIES.sample.relation.list | grep -q -- '-'
+}
+
+## Fill in the sample relations the family.soft file failed to provide, using the
+## metadata tables we have already downloaded.
+##
+## GEO does not always record '!Sample_relation = SRA: ...' (and occasionally not
+## the BioSample either) — GSE135325 and GSE137444 list the BioSample alone —
+## which used to leave the relation table, and with it the sample and biosample
+## lists, completely empty. The runinfo/filereport tables hold exactly the same
+## relations: every run carries its GSM, its SRX and its BioSample on one line.
+## So we group those lines by GSM and rebuild the missing fields from them.
+##
+## Fields are found by their shape rather than by column number, so the same
+## pass works on both the SRA table (GSM in col 30, SRX 11, SAMN 26) and the ENA
+## one (GSM in col 7, SRX 6, SAMN 4).
+function recover_sample_relations() {
+  local SERIES=$1
+  shift
+
+  local METAS=()
+  local META
+  for META in "$@"
+  do
+    if [[ -s $META ]]
+    then
+      METAS+=("$META")
+    fi
+  done
+
+  if [[ ${#METAS[@]} -eq 0 ]]
+  then
+    >&2 echo "ERROR: Cannot recover sample relations for $SERIES: no metadata table available!"
+    return 1
+  fi
+
+  if [[ ! -s $SERIES.gsm.list ]]
+  then
+    >&2 echo "ERROR: Cannot recover sample relations for $SERIES: no GSM IDs found in ${SERIES}_family.soft!"
+    return 1
+  fi
+
+  ## the relation table is read back in, so whatever the family file *did* tell
+  ## us always wins over the tables
+  touch $SERIES.sample.relation.list
+
+  awk -F'\t' -v OFS='\t' \
+      -v GSMS="$SERIES.gsm.list" -v REL="$SERIES.sample.relation.list" '
+    FILENAME == GSMS { if ($1 != "") { order[++n] = $1; want[$1] = 1 } next }
+
+    FILENAME == REL {
+      if ($2 == "" || !want[$2]) next
+      if ($3 != "-") sra[$2] = $3
+      if ($4 != "-") bio[$2] = $4
+      next
+    }
+
+    ## one metadata row: pick out the GSM it belongs to and the IDs beside it.
+    ## a row that names no GSM is still indexed by its BioSample, which is how a
+    ## sample gets resolved when the family file gave us that and nothing else
+    {
+      gsm = ""; srx = ""; samn = ""
+      for (i = 1; i <= NF; i++) {
+        if      ($i ~ /^GSM[0-9]+$/ && want[$i]) gsm  = $i
+        else if ($i ~ /^[SED]RX[0-9]+$/)         srx  = $i
+        else if ($i ~ /^SAM[NED][A-Z]?[0-9]+$/)  samn = $i
+      }
+      if (gsm != "") {
+        seen[gsm] = 1
+        add(gsm, srx)
+        if (samn != "" && bio[gsm] == "") bio[gsm] = samn
+      }
+      else if (samn != "") {
+        seen_samn[samn] = 1
+        if (srx != "") samn_sra[samn] = samn_sra[samn] "," srx
+      }
+    }
+
+    ## a GSM split over several experiments keeps all of them, comma separated
+    function add(g, x) {
+      if (x == "" || sra[g] ~ ("(^|,)" x "(,|$)")) return
+      sra[g] = (sra[g] == "" ? x : sra[g] "," x)
+    }
+
+    END {
+      for (j = 1; j <= n; j++) {
+        g = order[j]
+
+        if (!seen[g] && bio[g] != "" && seen_samn[bio[g]]) {
+          seen[g] = 1
+          split(substr(samn_sra[bio[g]], 2), xs, ",")
+          for (k in xs) add(g, xs[k])
+        }
+
+        ## nothing in either table knows this sample, so nothing downstream could
+        ## look it up either: the accession lookup would fail on it and take the
+        ## whole series down with it. Series routinely mix in samples that are not
+        ## in SRA at all (GSE135325 lists four BD AbSeq samples next to its two 10x
+        ## ones), so leave it out and carry on
+        if (!seen[g]) {
+          print "WARNING: no SRA/ENA metadata found for sample " g "; leaving it out" > "/dev/stderr"
+          continue
+        }
+
+        print g, g, (sra[g] == "" ? "-" : sra[g]), (bio[g] == "" ? "-" : bio[g])
+        kept++
+      }
+      if (kept == 0)
+        print "ERROR: none of the " n " samples of the series were found in the metadata tables!" > "/dev/stderr"
+    }
+  ' "$SERIES.gsm.list" "$SERIES.sample.relation.list" "${METAS[@]}" > $SERIES.sample.relation.list.tmp
+
+  if [[ ! -s $SERIES.sample.relation.list.tmp ]]
+  then
+    >&2 echo "ERROR: Failed to recover any sample relations for $SERIES from ${METAS[*]}!"
+    rm -f $SERIES.sample.relation.list.tmp
+    return 1
+  fi
+
+  mv $SERIES.sample.relation.list.tmp $SERIES.sample.relation.list
+  write_sample_lists $SERIES
+
+  ## samples missing from the tables have been left out by now, so only the
+  ## relations of the samples we kept are worth complaining about
+  if cut -f 3,4 $SERIES.sample.relation.list | grep -q -- '-'
+  then
+    >&2 echo "WARNING: Some sample relations for $SERIES are still incomplete after reading ${METAS[*]}; the accessions will be looked up by whichever ID we do have."
+  fi
+
+  >&2 echo "Recovered relations for `cat $SERIES.sample.relation.list | wc -l` of `cat $SERIES.gsm.list | wc -l` samples of $SERIES."
+  return 0
+}
+
 function parse_geo_family() {
   local SERIES=$1
 
@@ -49,23 +209,37 @@ function parse_geo_family() {
       | grep PRJ > $SERIES.project.list
   fi
   
-  ## get sample IDs; samples here are GSM IDs; usually for a 10x GSM==SRS==SRX, but I haven't checked *all* of the SRA you know 
+  ## the full list of GSM IDs the family file declares, in the order it declares
+  ## them; kept separately because the relation table below may not manage a line
+  ## for every one of them, and recover_sample_relations needs to know what is missing
+  grep '^\^SAMPLE' ${SERIES}_family.soft | perl -ne 'print "$1\n" if (m/(GSM\d+)/)' > $SERIES.gsm.list
+
+  ## get sample IDs; samples here are GSM IDs; usually for a 10x GSM==SRS==SRX, but I haven't checked *all* of the SRA you know
+  ##
+  ## One line per ^SAMPLE record, with '-' standing in for a relation the file
+  ## does not carry. Accumulating the fields until all four are set instead
+  ## would drop every sample with a missing relation *and* leave the fields of
+  ## that sample set, so the next sample's SRX would be paired with the previous
+  ## sample's BioSample. Missing fields are filled in later from the SRA/ENA
+  ## metadata tables (see recover_sample_relations).
   awk '
-	BEGIN {OFS="\t"}
-	# get all IDs
-  /\^SAMPLE/ { match($0, /GSM[0-9]+/); sample=substr($0, RSTART, RLENGTH) }
+  BEGIN {OFS="\t"}
+
+  function flush() {
+    if (sample != "")
+      print sample, (geo == "" ? sample : geo), (sra == "" ? "-" : sra), (biosample == "" ? "-" : biosample)
+    sample=""; geo=""; sra=""; biosample=""
+  }
+
+  /\^SAMPLE/ { flush(); match($0, /GSM[0-9]+/); sample=substr($0, RSTART, RLENGTH) }
   /Sample_geo_accession/ { match($0, /GSM[0-9]+/); geo=substr($0, RSTART, RLENGTH) }
   /Sample_relation = SRA:/ { match($0, /SRX[0-9]+/); sra=substr($0, RSTART, RLENGTH) }
   /Sample_relation = BioSample:/ { match($0, /SAMN[0-9]+/); biosample=substr($0, RSTART, RLENGTH) }
-  
-  # When all three pieces of information are found, print them as a tab-separated line
-  sample && geo && sra && biosample {
-    print sample,geo,sra,biosample
-    sample="";  geo=""; sra=""; biosample=""
-  }
+
+  END { flush() }
   ' ${SERIES}_family.soft > $SERIES.sample.relation.list
-  cut -f 2 ${SERIES}.sample.relation.list > $SERIES.sample.list
-  cut -f 4 ${SERIES}.sample.relation.list > $SERIES.biosample.list
+
+  write_sample_lists $SERIES
 
   ## first variable is used to spot dbGap and other problematic datasets;
   local EXPIDS=`grep Series_relation ${SERIES}_family.soft | grep -v PRJ | wc -l`
@@ -227,8 +401,11 @@ function get_sample_ids() {
       fi
     done
 
-    ## check that all samples are in accessions file and change status to 0
-    if [[ `cat $SERIES.sample.list | wc -l` -eq `cut -f 1 $SERIES.accessions.tsv | wc -l` ]]
+    ## check that all samples are in accessions file and change status to 0.
+    ## an empty sample list is never a success: it used to compare 0 with 0 and
+    ## report everything was fine, leaving the failure to surface much later as
+    ## a missing run list
+    if [[ -s $SERIES.accessions.tsv && `cat $SERIES.sample.list | wc -l` -eq `cut -f 1 $SERIES.accessions.tsv | wc -l` ]]
     then
       STATUS=0
     fi
@@ -238,7 +415,7 @@ function get_sample_ids() {
   return $STATUS
 }
 
-subset_accessions() {
+subset_sample_list() {
   local SERIES=$1
   local SUBSET=${2:-""}
 
@@ -249,9 +426,19 @@ subset_accessions() {
     >&2 cat $SUBSET
     ## add newline character to the end of the file if there is none
     sed -i -e '$a\' $SUBSET
-    ## subset the accessions file
+    ## subset the sample list
     grep -f $SUBSET $SERIES.sample.list > $SERIES.sample.list.tmp
     mv $SERIES.sample.list.tmp $SERIES.sample.list
+  fi
+}
+
+subset_accessions() {
+  local SERIES=$1
+  local SUBSET=${2:-""}
+
+  if [[ -s $SUBSET ]]
+  then
+    ## subset the accessions file
     grep -f $SUBSET $SERIES.accessions.tsv > $SERIES.accessions.tsv.tmp
     mv $SERIES.accessions.tsv.tmp $SERIES.accessions.tsv
   fi
@@ -265,6 +452,30 @@ subset_meta() {
   then
     grep -f $SUBSET $META > $META.tmp
     mv $META.tmp $META
+  fi
+}
+
+## narrow one metadata table down to the requested samples, preferring the
+## caller's subset and falling back to the BioSample IDs when the table is keyed
+## by those instead. A missing table is not an error: only one of ENA/SRA may exist.
+subset_metadata_table() {
+  local SERIES=$1
+  local META=$2
+  local SUBSET=${3:-""}
+
+  if [[ ! -s $META ]]
+  then
+    return 0
+  fi
+
+  if [[ -s $SUBSET ]] && grep -q -f $SUBSET $META
+  then
+    subset_meta $META $SUBSET
+  elif [[ -s "$SERIES.biosample.list" ]]
+  then
+    subset_meta $META $SERIES.biosample.list
+  else
+    >&2 echo "WARNING: No subset file provided, and no biosample list found; using the full metadata file $META"
   fi
 }
 
@@ -288,13 +499,22 @@ function make_util_files() {
   local SUBSET=${2:-""}
   local STATUS=1
 
-  if [[ -s $SERIES.accessions.tsv ]] 
-  then 
+  if [[ -s $SERIES.accessions.tsv ]]
+  then
     >&2 echo "WARNING: file $SERIES.accessions.tsv exists. This shouldn't normally happen. Overwriting the file.."
     rm $SERIES.accessions.tsv
   fi
 
-  
+  ## narrow down the sample list before looking up accessions, so samples outside the
+  ## requested subset (which may be missing from the metadata) don't abort the whole run
+  subset_sample_list $SERIES $SUBSET
+
+  if [[ ! -s $SERIES.sample.list ]]
+  then
+    >&2 echo "ERROR: No samples to process for $SERIES! Either no sample IDs could be worked out from the metadata, or none of them matched the requested subset."
+    exit 1
+  fi
+
   ## get sample, experiment, and run IDs for each sample from SRA metadata file
   if [[ $SERIES == GSE* ]]
   then
@@ -321,37 +541,22 @@ function make_util_files() {
   ## make few more useful metadata files
   make_run_relation_files $SERIES
 
-  ## finally, classify each run into 3 major types: 
+  ## finally, classify each run into 3 major types:
   ## 1) we have useable 10x paired-end files; 2) we need to get them from 10x BAM; 3) we need to get them from SRA
-  ## simultaneously, '$SERIES.urls.list' is generated listing all things that need to be downloaded 
-  if [[ -s "$SERIES.ena.tsv" ]]
+  ## simultaneously, '$SERIES.urls.list' is generated listing all things that need to be downloaded
+  if [[ ! -s "$SERIES.ena.tsv" && ! -s "$SERIES.sra.tsv" ]]
   then
-    if grep -q -f $SUBSET $SERIES.ena.tsv;
-    then
-      subset_meta $SERIES.ena.tsv $SUBSET
-    elif [[ -s "$SERIES.biosample.list" ]];
-    then
-      subset_meta $SERIES.ena.tsv $SERIES.biosample.list
-    else
-      >&2 echo "WARNING: No subset file provided, and no biosample list found; using the full metadata file $SERIES.ena.tsv"
-    fi
-    parse_ena_metadata.sh $SERIES > $SERIES.parsed.tsv
-  elif [[ -s "$SERIES.sra.tsv" ]]
-  then
-    if grep -q -f $SUBSET $SERIES.sra.tsv;
-    then
-      subset_meta $SERIES.sra.tsv $SUBSET
-    elif [[ -s "$SERIES.biosample.list" ]];
-    then
-      subset_meta $SERIES.sra.tsv $SERIES.biosample.list
-    else
-      >&2 echo "WARNING: No subset file provided, and no biosample list found; using the full metadata file $SERIES.sra.tsv"
-    fi
-    parse_sra_metadata.sh $SERIES > $SERIES.parsed.tsv
-  else
     >&2 echo "ERROR: No metadata file found for $SERIES!"
     exit 1
   fi
+
+  ## both tables are narrowed down and handed to the parser together: a run is
+  ## frequently listed in only one of them, and the species recorded in the
+  ## other is the only thing standing between us and an 'UNKNOWN'
+  subset_metadata_table $SERIES $SERIES.ena.tsv $SUBSET
+  subset_metadata_table $SERIES $SERIES.sra.tsv $SUBSET
+
+  parse_metadata.sh $SERIES > $SERIES.parsed.tsv
 }
 
 function process_geo() {
@@ -429,6 +634,20 @@ function process_geo() {
     exit 1
   fi
 
+  ## the family file does not always carry the SRA (and sometimes not even the
+  ## BioSample) relation of its samples; now that we have the metadata tables,
+  ## take the missing relations from there
+  if relations_incomplete $SERIES
+  then
+    >&2 echo "WARNING: ${SERIES}_family.soft did not give a complete set of sample relations; recovering them from the metadata tables.."
+    recover_sample_relations $SERIES $SERIES.sra.tsv $SERIES.ena.tsv
+    if [[ $? -ne 0 ]]
+    then
+      >&2 echo "ERROR: Failed to recover sample relations for $SERIES!"
+      exit 1
+    fi
+  fi
+
   ## make utility files
   make_util_files $SERIES $SUBSET
 }
@@ -488,7 +707,7 @@ function main () {
   then
     >&2 echo "USAGE: collect_metadata.sh <series_id> [sample_list]"
     >&2 echo
-    >&2 echo "(requires curl_ena_metadata.sh and parse_ena_metadata.sh present in the same directory)" 
+    >&2 echo "(requires curl_ena_metadata.sh, curl_sra_metadata.sh and parse_metadata.sh present in the same directory)"
     exit 1
   fi
 

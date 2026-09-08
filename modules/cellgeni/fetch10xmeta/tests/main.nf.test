@@ -1,0 +1,417 @@
+nextflow_process {
+
+    name "Test Process FETCH10XMETA"
+    script "../main.nf"
+    process "FETCH10XMETA"
+
+    tag "modules"
+    tag "cellgeni/fetch10xmeta"
+
+    // links.tsv has no header, so nft-csv names its columns C0..C4:
+    //
+    //   C0  run       SRR/ERR/DRR accession
+    //   C1  species   scientific name, or 'UNKNOWN' when neither table knew
+    //   C2  location  the URL (or ';'-separated URLs) the reads come from
+    //   C3  type      ORIFQ | ENAFQ | BAM | SRA
+    //   C4  sample    the sample accession the run belongs to, or 'NA'
+    //
+    // C2 is the one column here that is not reproducible: SDL and the SRA
+    // mirrors hand out URLs whose host, path and (for BAMs) signature change
+    // between calls. So it is checked for shape but never snapshotted.
+    //
+    // Every test downloads live metadata from GEO, SRA, ENA and BioStudies, so
+    // they need outbound network access -- see tests/scripts/run_tests.bsub.
+
+    test("GEO - ENA paired-end fastq") {
+        tag "geo"
+        tag "enafq"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE111360'], null ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C4.every { it ==~ /^GSM\d+$/ } },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.unique() == ['Homo sapiens'] },
+                { assert links.columns.C3.unique() == ['ENAFQ'] },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("GEO - ENA paired-end fastq - mouse") {
+        tag "geo"
+        tag "enafq"
+        tag "mouse"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE160513'], null ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C4.every { it ==~ /^GSM\d+$/ } },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.unique() == ['Mus musculus'] },
+                { assert links.columns.C3.unique() == ['ENAFQ'] },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("GEO - one run per sample") {
+        tag "geo"
+        tag "enafq"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE250130'], null ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                // this series has exactly one run per sample, so a regression in the
+                // sample-to-run mapping shows up here as a count mismatch
+                { assert links.columns.C4.unique().size() == links.rowCount },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("GEO - mixed ENA fastq and SRA archive runs") {
+        tag "geo"
+        tag "enafq"
+        tag "sra"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE264508'], null ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C4.every { it ==~ /^GSM\d+$/ } },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                // some runs of this series are served as fastq by ENA and the rest
+                // only as SRA archives, so it exercises both branches at once
+                { assert links.columns.C3.unique().sort() == ['ENAFQ', 'SRA'] },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("GEO - SRA archive only") {
+        tag "geo"
+        tag "sra"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE117988'], null ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C4.every { it ==~ /^GSM\d+$/ } },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                { assert links.columns.C3.unique() == ['SRA'] },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("GEO - 10x BAM") {
+        tag "geo"
+        tag "bam"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE274955'], null ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C4.every { it ==~ /^GSM\d+$/ } },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                // reads are only available inside the original 10x BAMs here
+                { assert links.columns.C3.unique() == ['BAM'] },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("ArrayExpress - submitter fastq from the SDRF") {
+        tag "arrayexpress"
+        tag "orifq"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'E-MTAB-9221'], null ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert process.out.txt },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                // ArrayExpress samples are ERS, and the SDRF's own fastq URLs win
+                // over everything ENA offers
+                { assert links.columns.C4.every { it ==~ /^ERS\d+$/ } },
+                { assert links.columns.C3.unique() == ['ORIFQ'] },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("BioProject - samples taken straight from ENA") {
+        tag "bioproject"
+        tag "enafq"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'PRJNA511433'], null ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                // no GEO family file in this path
+                { assert !process.out.soft },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                // samples are the SRS accessions the ENA table reports
+                { assert links.columns.C4.every { it ==~ /^[SED]RS\d+$/ } },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("GEO - family file without SRA relations - all samples") {
+        tag "geo"
+        tag "relation-recovery"
+
+        // GSE135325's family.soft records '!Sample_relation = BioSample:' and no
+        // '!Sample_relation = SRA:' line. Before the relations were recovered from
+        // the metadata tables this produced an empty sample list and the process
+        // died with "No run list 'GSE135325.run.list' found!".
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE135325'], null ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                { assert links.columns.C4.unique().sort() == [
+                    'GSM4005486', 'GSM4005487', 'GSM4005488',
+                    'GSM4005489', 'GSM4005490', 'GSM4005491'
+                  ] },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("GEO - family file without SRA relations - subset of samples") {
+        tag "geo"
+        tag "relation-recovery"
+        tag "subset"
+
+        // the exact request that used to fail: only the two 10x samples of
+        // GSE135325, the other four being BD AbSeq
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE135325'], 'GSM4005490,GSM4005491' ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                { assert links.columns.C4.unique().sort() == ['GSM4005490', 'GSM4005491'] },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("GEO - family file without SRA relations - twelve samples") {
+        tag "geo"
+        tag "relation-recovery"
+        tag "sra"
+
+        // same missing-relation problem as GSE135325, but every sample of the
+        // series is affected rather than a subset of them
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE137444'], null ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                { assert links.columns.C4.unique().size() == 12 },
+                { assert links.columns.C4.every { it ==~ /^GSM41076(2[2-9]|3[0-3])$/ } },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("GEO - subset of samples") {
+        tag "geo"
+        tag "subset"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE117988'], 'GSM3330564,GSM3330560' ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                // nothing outside the requested subset may leak through
+                { assert links.columns.C4.unique().sort() == ['GSM3330560', 'GSM3330564'] },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("ArrayExpress - subset of samples") {
+        tag "arrayexpress"
+        tag "subset"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'E-MTAB-9221'], 'ERS4689152,ERS4689153' ]
+                """
+            }
+        }
+
+        then {
+            def links = path(process.out.links[0][1]).csv(sep: '\t', header: false)
+            assertAll(
+                { assert process.success },
+                { assert process.out.versions },
+                { assert links.columnCount == 5 && links.rowCount > 0 },
+                { assert links.columns.C2.every { it ==~ /^(https?:\/\/|ftp)\S+$/ } },
+                { assert links.columns.C1.every { it != 'UNKNOWN' } },
+                { assert links.columns.C4.unique().sort() == ['ERS4689152', 'ERS4689153'] },
+                { assert snapshot(links.rows.collect { [it.C0, it.C1, it.C3, it.C4] }.sort()).match() }
+            )
+        }
+    }
+
+    test("GEO - stub") {
+        tag "geo"
+        tag "stub"
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [ [id:'GSE111360'], null ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+}

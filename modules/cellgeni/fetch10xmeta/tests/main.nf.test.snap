@@ -1,0 +1,2760 @@
+{
+    "GEO - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "GSE111360"
+                        },
+                        "links.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "GSE111360"
+                        },
+                        "GSE111360.sample.list:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "2": [
+                    [
+                        {
+                            "id": "GSE111360"
+                        },
+                        [
+                            "GSE111360.accessions.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "links.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        ]
+                    ]
+                ],
+                "3": [
+                    
+                ],
+                "4": [
+                    
+                ],
+                "5": [
+                    "versions.yml:md5,6838788925b3bf22f5dd18d031336633"
+                ],
+                "links": [
+                    [
+                        {
+                            "id": "GSE111360"
+                        },
+                        "links.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "list": [
+                    [
+                        {
+                            "id": "GSE111360"
+                        },
+                        "GSE111360.sample.list:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "soft": [
+                    
+                ],
+                "tsv": [
+                    [
+                        {
+                            "id": "GSE111360"
+                        },
+                        [
+                            "GSE111360.accessions.tsv:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "links.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        ]
+                    ]
+                ],
+                "txt": [
+                    
+                ],
+                "versions": [
+                    "versions.yml:md5,6838788925b3bf22f5dd18d031336633"
+                ]
+            }
+        ],
+        "timestamp": "2026-08-07T12:49:43.78103931",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "GEO - family file without SRA relations - all samples": {
+        "content": [
+            [
+                [
+                    "SRR9895473",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005486"
+                ],
+                [
+                    "SRR9895474",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005486"
+                ],
+                [
+                    "SRR9895475",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005486"
+                ],
+                [
+                    "SRR9895476",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005486"
+                ],
+                [
+                    "SRR9895477",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005486"
+                ],
+                [
+                    "SRR9895478",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005486"
+                ],
+                [
+                    "SRR9895479",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005486"
+                ],
+                [
+                    "SRR9895480",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005486"
+                ],
+                [
+                    "SRR9895481",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005487"
+                ],
+                [
+                    "SRR9895482",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005487"
+                ],
+                [
+                    "SRR9895483",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005487"
+                ],
+                [
+                    "SRR9895484",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005487"
+                ],
+                [
+                    "SRR9895485",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005487"
+                ],
+                [
+                    "SRR9895486",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005487"
+                ],
+                [
+                    "SRR9895487",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005487"
+                ],
+                [
+                    "SRR9895488",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005487"
+                ],
+                [
+                    "SRR9895489",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005488"
+                ],
+                [
+                    "SRR9895490",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005488"
+                ],
+                [
+                    "SRR9895491",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005489"
+                ],
+                [
+                    "SRR9895492",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005489"
+                ],
+                [
+                    "SRR9895493",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895494",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895495",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895496",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895497",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895498",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895499",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895500",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895501",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895502",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895503",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895504",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895505",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895506",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895507",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895508",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:46:31.895709138",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "GEO - subset of samples": {
+        "content": [
+            [
+                [
+                    "SRR7722938",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM3330560"
+                ],
+                [
+                    "SRR7722942",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM3330564"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:48:30.417211854",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "GEO - ENA paired-end fastq - mouse": {
+        "content": [
+            [
+                [
+                    "SRR12952961",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874359"
+                ],
+                [
+                    "SRR12952962",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874359"
+                ],
+                [
+                    "SRR12952963",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874359"
+                ],
+                [
+                    "SRR12952964",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874359"
+                ],
+                [
+                    "SRR12952965",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874360"
+                ],
+                [
+                    "SRR12952966",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874360"
+                ],
+                [
+                    "SRR12952967",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874360"
+                ],
+                [
+                    "SRR12952968",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874360"
+                ],
+                [
+                    "SRR12952969",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874360"
+                ],
+                [
+                    "SRR12952970",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874360"
+                ],
+                [
+                    "SRR12952971",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874360"
+                ],
+                [
+                    "SRR12952972",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874360"
+                ],
+                [
+                    "SRR12952973",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874361"
+                ],
+                [
+                    "SRR12952974",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874361"
+                ],
+                [
+                    "SRR12952975",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874361"
+                ],
+                [
+                    "SRR12952976",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874361"
+                ],
+                [
+                    "SRR12952977",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874361"
+                ],
+                [
+                    "SRR12952978",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874361"
+                ],
+                [
+                    "SRR12952979",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874361"
+                ],
+                [
+                    "SRR12952980",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874361"
+                ],
+                [
+                    "SRR12952981",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874362"
+                ],
+                [
+                    "SRR12952982",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874362"
+                ],
+                [
+                    "SRR12952983",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874362"
+                ],
+                [
+                    "SRR12952984",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874362"
+                ],
+                [
+                    "SRR12952985",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874362"
+                ],
+                [
+                    "SRR12952986",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874362"
+                ],
+                [
+                    "SRR12952987",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874362"
+                ],
+                [
+                    "SRR12952988",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874362"
+                ],
+                [
+                    "SRR12952989",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874363"
+                ],
+                [
+                    "SRR12952990",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874363"
+                ],
+                [
+                    "SRR12952991",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874363"
+                ],
+                [
+                    "SRR12952992",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874363"
+                ],
+                [
+                    "SRR12952993",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874363"
+                ],
+                [
+                    "SRR12952994",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874363"
+                ],
+                [
+                    "SRR12952995",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874363"
+                ],
+                [
+                    "SRR12952996",
+                    "Mus musculus",
+                    "ENAFQ",
+                    "GSM4874363"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:41:55.528497438",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "GEO - 10x BAM": {
+        "content": [
+            [
+                [
+                    "SRR30256648",
+                    "Homo sapiens",
+                    "BAM",
+                    "GSM8462816"
+                ],
+                [
+                    "SRR30256649",
+                    "Homo sapiens",
+                    "BAM",
+                    "GSM8462815"
+                ],
+                [
+                    "SRR30256650",
+                    "Homo sapiens",
+                    "BAM",
+                    "GSM8462814"
+                ],
+                [
+                    "SRR30256651",
+                    "Homo sapiens",
+                    "BAM",
+                    "GSM8462813"
+                ],
+                [
+                    "SRR30256652",
+                    "Homo sapiens",
+                    "BAM",
+                    "GSM8462812"
+                ],
+                [
+                    "SRR30256653",
+                    "Homo sapiens",
+                    "BAM",
+                    "GSM8462811"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:44:56.437365089",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "BioProject - samples taken straight from ENA": {
+        "content": [
+            [
+                [
+                    "SRR8363194",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363195",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363196",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363197",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363198",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363199",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363200",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363201",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363202",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363203",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363204",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363205",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363206",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363207",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363208",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363209",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363210",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363211",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363212",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363213",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363214",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363215",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363216",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363217",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181124"
+                ],
+                [
+                    "SRR8363218",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363219",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363220",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363221",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363222",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363223",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363224",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363225",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363226",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363227",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363228",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363229",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363230",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363231",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363232",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363233",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363234",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363235",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363236",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363237",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363238",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363239",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363240",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363241",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181123"
+                ],
+                [
+                    "SRR8363242",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363243",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363244",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363245",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363246",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363247",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363248",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363249",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363250",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363251",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363252",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363253",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363254",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363255",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363256",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363257",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363258",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181129"
+                ],
+                [
+                    "SRR8363259",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181129"
+                ],
+                [
+                    "SRR8363260",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181129"
+                ],
+                [
+                    "SRR8363261",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181129"
+                ],
+                [
+                    "SRR8363262",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181130"
+                ],
+                [
+                    "SRR8363263",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181130"
+                ],
+                [
+                    "SRR8363264",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181130"
+                ],
+                [
+                    "SRR8363265",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181130"
+                ],
+                [
+                    "SRR8363266",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363267",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363268",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363269",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181125"
+                ],
+                [
+                    "SRR8363270",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363271",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363272",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363273",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363274",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363275",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363276",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363277",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363278",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363279",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363280",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363281",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181126"
+                ],
+                [
+                    "SRR8363282",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363283",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363284",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363285",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363286",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363287",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363288",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363289",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363290",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363291",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363292",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363293",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363294",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363295",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363296",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363297",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363298",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363299",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363300",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363301",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363302",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363303",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363304",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363305",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181128"
+                ],
+                [
+                    "SRR8363306",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363307",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363308",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363309",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363310",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363311",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363312",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363313",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363314",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363315",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363316",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363317",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363318",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363319",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363320",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ],
+                [
+                    "SRR8363321",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "SRS4181127"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:46:05.834133812",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "GEO - one run per sample": {
+        "content": [
+            [
+                [
+                    "SRR27190799",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974286"
+                ],
+                [
+                    "SRR27190800",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974285"
+                ],
+                [
+                    "SRR27190801",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974284"
+                ],
+                [
+                    "SRR27190802",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974283"
+                ],
+                [
+                    "SRR27190803",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974282"
+                ],
+                [
+                    "SRR27190804",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974281"
+                ],
+                [
+                    "SRR27190805",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974280"
+                ],
+                [
+                    "SRR27190806",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974304"
+                ],
+                [
+                    "SRR27190807",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974303"
+                ],
+                [
+                    "SRR27190808",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974302"
+                ],
+                [
+                    "SRR27190809",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974301"
+                ],
+                [
+                    "SRR27190810",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974300"
+                ],
+                [
+                    "SRR27190811",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974299"
+                ],
+                [
+                    "SRR27190812",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974298"
+                ],
+                [
+                    "SRR27190813",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974297"
+                ],
+                [
+                    "SRR27190814",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974279"
+                ],
+                [
+                    "SRR27190815",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974296"
+                ],
+                [
+                    "SRR27190816",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974295"
+                ],
+                [
+                    "SRR27190817",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974294"
+                ],
+                [
+                    "SRR27190818",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974293"
+                ],
+                [
+                    "SRR27190819",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974292"
+                ],
+                [
+                    "SRR27190820",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974291"
+                ],
+                [
+                    "SRR27190821",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974290"
+                ],
+                [
+                    "SRR27190822",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974289"
+                ],
+                [
+                    "SRR27190823",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974288"
+                ],
+                [
+                    "SRR27190824",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974287"
+                ],
+                [
+                    "SRR27190825",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974278"
+                ],
+                [
+                    "SRR27190826",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM7974277"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:42:20.859058626",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "GEO - SRA archive only": {
+        "content": [
+            [
+                [
+                    "SRR7722937",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM3330559"
+                ],
+                [
+                    "SRR7722938",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM3330560"
+                ],
+                [
+                    "SRR7722939",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM3330561"
+                ],
+                [
+                    "SRR7722940",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM3330562"
+                ],
+                [
+                    "SRR7722941",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM3330563"
+                ],
+                [
+                    "SRR7722942",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM3330564"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:44:29.945049966",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "ArrayExpress - submitter fastq from the SDRF": {
+        "content": [
+            [
+                [
+                    "ERR4265292",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689152"
+                ],
+                [
+                    "ERR4265293",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689152"
+                ],
+                [
+                    "ERR4265294",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689153"
+                ],
+                [
+                    "ERR4265295",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689153"
+                ],
+                [
+                    "ERR4265296",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689154"
+                ],
+                [
+                    "ERR4265297",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689154"
+                ],
+                [
+                    "ERR4265298",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689155"
+                ],
+                [
+                    "ERR4265299",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689155"
+                ],
+                [
+                    "ERR4265300",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689156"
+                ],
+                [
+                    "ERR4265301",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689156"
+                ],
+                [
+                    "ERR4265302",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689157"
+                ],
+                [
+                    "ERR4265303",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689157"
+                ],
+                [
+                    "ERR4265304",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689158"
+                ],
+                [
+                    "ERR4265305",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689158"
+                ],
+                [
+                    "ERR4265306",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689159"
+                ],
+                [
+                    "ERR4265307",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689159"
+                ],
+                [
+                    "ERR4265308",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689161"
+                ],
+                [
+                    "ERR4265309",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689161"
+                ],
+                [
+                    "ERR4265310",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689160"
+                ],
+                [
+                    "ERR4265311",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689160"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:45:42.88789152",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "ArrayExpress - subset of samples": {
+        "content": [
+            [
+                [
+                    "ERR4265292",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689152"
+                ],
+                [
+                    "ERR4265293",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689152"
+                ],
+                [
+                    "ERR4265294",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689153"
+                ],
+                [
+                    "ERR4265295",
+                    "Homo sapiens",
+                    "ORIFQ",
+                    "ERS4689153"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:49:19.649302265",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "GEO - family file without SRA relations - twelve samples": {
+        "content": [
+            [
+                [
+                    "SRR10229932",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107622"
+                ],
+                [
+                    "SRR10229933",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107622"
+                ],
+                [
+                    "SRR10229934",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107623"
+                ],
+                [
+                    "SRR10229935",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107623"
+                ],
+                [
+                    "SRR10229936",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107624"
+                ],
+                [
+                    "SRR10229937",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107625"
+                ],
+                [
+                    "SRR10229938",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107626"
+                ],
+                [
+                    "SRR10229939",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107626"
+                ],
+                [
+                    "SRR10229940",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107626"
+                ],
+                [
+                    "SRR10229941",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107626"
+                ],
+                [
+                    "SRR10229942",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107627"
+                ],
+                [
+                    "SRR10229943",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107627"
+                ],
+                [
+                    "SRR10229944",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107627"
+                ],
+                [
+                    "SRR10229945",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107627"
+                ],
+                [
+                    "SRR10229946",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107628"
+                ],
+                [
+                    "SRR10229947",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107628"
+                ],
+                [
+                    "SRR10229948",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107628"
+                ],
+                [
+                    "SRR10229949",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107628"
+                ],
+                [
+                    "SRR10229950",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107629"
+                ],
+                [
+                    "SRR10229951",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107630"
+                ],
+                [
+                    "SRR10229952",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229953",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229954",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229955",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229956",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229957",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229958",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229959",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229960",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229961",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229962",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229963",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107631"
+                ],
+                [
+                    "SRR10229964",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229965",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229966",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229967",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229968",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229969",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229970",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229971",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229972",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229973",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229974",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229975",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107632"
+                ],
+                [
+                    "SRR10229976",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107633"
+                ],
+                [
+                    "SRR10229977",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107633"
+                ],
+                [
+                    "SRR10229978",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107633"
+                ],
+                [
+                    "SRR10229979",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107633"
+                ],
+                [
+                    "SRR10229980",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107633"
+                ],
+                [
+                    "SRR10229981",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM4107633"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:48:00.233153561",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "GEO - ENA paired-end fastq": {
+        "content": [
+            [
+                [
+                    "SRR6798781",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029087"
+                ],
+                [
+                    "SRR6798782",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029088"
+                ],
+                [
+                    "SRR6798783",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029089"
+                ],
+                [
+                    "SRR6798784",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029090"
+                ],
+                [
+                    "SRR6798785",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029091"
+                ],
+                [
+                    "SRR6798786",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029092"
+                ],
+                [
+                    "SRR6798787",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029093"
+                ],
+                [
+                    "SRR6798788",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029094"
+                ],
+                [
+                    "SRR6798797",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029103"
+                ],
+                [
+                    "SRR6798798",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029104"
+                ],
+                [
+                    "SRR6798799",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029105"
+                ],
+                [
+                    "SRR6798800",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029106"
+                ],
+                [
+                    "SRR6798801",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029107"
+                ],
+                [
+                    "SRR6798802",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029108"
+                ],
+                [
+                    "SRR6798803",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029109"
+                ],
+                [
+                    "SRR6798804",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029110"
+                ],
+                [
+                    "SRR6798805",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029111"
+                ],
+                [
+                    "SRR6798806",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029112"
+                ],
+                [
+                    "SRR6798807",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029113"
+                ],
+                [
+                    "SRR6798808",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029114"
+                ],
+                [
+                    "SRR6798809",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029115"
+                ],
+                [
+                    "SRR6798810",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029116"
+                ],
+                [
+                    "SRR6798811",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029117"
+                ],
+                [
+                    "SRR6798812",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029118"
+                ],
+                [
+                    "SRR6798813",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029119"
+                ],
+                [
+                    "SRR6798814",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029120"
+                ],
+                [
+                    "SRR6798815",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029121"
+                ],
+                [
+                    "SRR6910844",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029092"
+                ],
+                [
+                    "SRR6910845",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029092"
+                ],
+                [
+                    "SRR6910846",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029092"
+                ],
+                [
+                    "SRR6911162",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029103"
+                ],
+                [
+                    "SRR6911163",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029103"
+                ],
+                [
+                    "SRR6911164",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029103"
+                ],
+                [
+                    "SRR6911166",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029106"
+                ],
+                [
+                    "SRR6911167",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029106"
+                ],
+                [
+                    "SRR6911168",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3029106"
+                ],
+                [
+                    "SRR8157525",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3457010"
+                ],
+                [
+                    "SRR8157526",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3457011"
+                ],
+                [
+                    "SRR8157527",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3457012"
+                ],
+                [
+                    "SRR8157528",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3457013"
+                ],
+                [
+                    "SRR8157529",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3457014"
+                ],
+                [
+                    "SRR8157530",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3457015"
+                ],
+                [
+                    "SRR8157531",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3457016"
+                ],
+                [
+                    "SRR8157532",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM3457017"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:41:29.883712924",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "GEO - mixed ENA fastq and SRA archive runs": {
+        "content": [
+            [
+                [
+                    "SRR28758706",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219174"
+                ],
+                [
+                    "SRR28758707",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219160"
+                ],
+                [
+                    "SRR28758712",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219159"
+                ],
+                [
+                    "SRR28758713",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219159"
+                ],
+                [
+                    "SRR28758714",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219159"
+                ],
+                [
+                    "SRR28758715",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219159"
+                ],
+                [
+                    "SRR28758716",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219176"
+                ],
+                [
+                    "SRR28758717",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219176"
+                ],
+                [
+                    "SRR28758718",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219176"
+                ],
+                [
+                    "SRR28758719",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219176"
+                ],
+                [
+                    "SRR28758720",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219175"
+                ],
+                [
+                    "SRR28758721",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219175"
+                ],
+                [
+                    "SRR28758722",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219175"
+                ],
+                [
+                    "SRR28758723",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219175"
+                ],
+                [
+                    "SRR28758724",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219173"
+                ],
+                [
+                    "SRR28758725",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219172"
+                ],
+                [
+                    "SRR28758726",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219171"
+                ],
+                [
+                    "SRR28758727",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219170"
+                ],
+                [
+                    "SRR28758728",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219169"
+                ],
+                [
+                    "SRR28758729",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219165"
+                ],
+                [
+                    "SRR28758730",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219168"
+                ],
+                [
+                    "SRR28758734",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219167"
+                ],
+                [
+                    "SRR28758735",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219167"
+                ],
+                [
+                    "SRR28758736",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219167"
+                ],
+                [
+                    "SRR28758737",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219167"
+                ],
+                [
+                    "SRR28758738",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219166"
+                ],
+                [
+                    "SRR28758739",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219166"
+                ],
+                [
+                    "SRR28758740",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219166"
+                ],
+                [
+                    "SRR28758741",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219166"
+                ],
+                [
+                    "SRR28758742",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219164"
+                ],
+                [
+                    "SRR28758743",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219164"
+                ],
+                [
+                    "SRR28758744",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219164"
+                ],
+                [
+                    "SRR28758746",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219163"
+                ],
+                [
+                    "SRR28758747",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219162"
+                ],
+                [
+                    "SRR28758748",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219161"
+                ],
+                [
+                    "SRR28758749",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219161"
+                ],
+                [
+                    "SRR28758750",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219161"
+                ],
+                [
+                    "SRR28758751",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM8219161"
+                ],
+                [
+                    "SRR28758708",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM8219177"
+                ],
+                [
+                    "SRR28758709",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM8219177"
+                ],
+                [
+                    "SRR28758710",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM8219177"
+                ],
+                [
+                    "SRR28758711",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM8219177"
+                ],
+                [
+                    "SRR28758731",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM8219168"
+                ],
+                [
+                    "SRR28758732",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM8219168"
+                ],
+                [
+                    "SRR28758733",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM8219168"
+                ],
+                [
+                    "SRR28758745",
+                    "Homo sapiens",
+                    "SRA",
+                    "GSM8219164"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:42:55.402038814",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "GEO - family file without SRA relations - subset of samples": {
+        "content": [
+            [
+                [
+                    "SRR9895493",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895494",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895495",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895496",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895497",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895498",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895499",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895500",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005490"
+                ],
+                [
+                    "SRR9895501",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895502",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895503",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895504",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895505",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895506",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895507",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ],
+                [
+                    "SRR9895508",
+                    "Homo sapiens",
+                    "ENAFQ",
+                    "GSM4005491"
+                ]
+            ]
+        ],
+        "timestamp": "2026-08-07T12:46:58.719445982",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}
