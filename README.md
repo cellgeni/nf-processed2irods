@@ -31,6 +31,32 @@ See `nextflow run main.nf --help` for the full option list.
 
 There is a ready-made launcher in [`examples/RESUME`](examples/RESUME) — edit the `samples` path and run it.
 
+## Recommended run sequence
+
+Rather than uploading in one shot, run the pipeline in three incremental passes so you
+can catch problems before anything reaches iRODS. Use `-resume` between passes to reuse
+completed work.
+
+**1. Local validation only** — confirm the sample directories are well-formed. Inspect
+`results/localreports.txt` and make sure there are no errors before continuing.
+
+```bash
+nextflow run main.nf --samples examples/samples.csv --validate_local_only --no_exit_local
+```
+
+**2. Metadata collection (no upload)** — confirm the samples are not already on iRODS and
+that metadata was collected for all of them. Check `results/sample_metadata.csv`.
+
+```bash
+nextflow run main.nf --samples examples/samples.csv --collect_metadata
+```
+
+**3. Full run** — process, upload to iRODS, attach metadata, and validate the collections.
+
+```bash
+nextflow run main.nf --samples examples/samples.csv -resume
+```
+
 ## Input
 
 ### `--samples` — samples to process and upload
@@ -110,6 +136,7 @@ Written under `--outdir` (default `results/`):
 | `md5sums.tsv` | Local vs. iRODS MD5 checksums for every uploaded file. |
 | `localreports.txt` | Local validation reports. |
 | `irodsreports.txt` | iRODS collection validation reports — **check this for errors/warnings.** |
+| `already_on_irods.csv` | Written (and the run aborted) when requested samples already exist on iRODS: `dataset_id,sample_id,irodspath`. |
 | `versions.yml` | Software versions used. |
 
 On iRODS, data is organised as:
@@ -124,7 +151,8 @@ On iRODS, data is organised as:
 
 ## Requirements
 
-- **Nextflow** ≥ 26.04.1
+- **Nextflow** ≥ 26.04.6 (earlier 26.04.x releases mis-resolve typed process
+  outputs when tasks are submitted as array jobs)
 - **Singularity** for containerised execution
 - **LSF** for job scheduling (Sanger HPC)
 - An initialised **iRODS** session (`iinit`) with `~/.irods/irods_environment.json`
@@ -156,7 +184,7 @@ Execution reports are written to `reports/` with a timestamped suffix:
 ## Troubleshooting
 
 - **`--irodsconfig ... does not exist`** — run `iinit` first, or pass `--irodsconfig /path/to/irods_environment.json`.
-- **"sample(s) already exist on iRODS"** — the pipeline refuses to overwrite existing sample collections; remove them from iRODS or drop them from your `--samples` CSV.
+- **"sample(s) already exist on iRODS"** — the pipeline refuses to overwrite existing sample collections. The full list is in `results/already_on_irods.csv` (`dataset_id,sample_id,irodspath`); remove those collections from iRODS or drop them from your `--samples` CSV. To purge them: `tail -n +2 results/already_on_irods.csv | cut -d, -f3 | xargs -I{} irm -rf {}`.
 - **iRODS validation warnings** — inspect `results/irodsreports.txt`.
 - **Detailed process logs** — see the Nextflow work directory (`nf-work/`).
 
