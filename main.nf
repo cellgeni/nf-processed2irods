@@ -32,6 +32,10 @@ def helpMessage() {
                               (default: /archive/cellgeni/datasets).
         --irodsconfig         Path to irods_environment.json used to connect to iRODS
                               (default: \$HOME/.irods/irods_environment.json).
+        --schema_local        Schema used to validate local dataset directories
+                              (default: configs/schema/local_dataset_root.anchored.yml).
+        --schema_irods        Schema used to validate uploaded iRODS collections
+                              (default: configs/schema/dataset_root.anchored.yml).
         --validate_local_only Only run local validation, then stop (default: false).
         --collect_metadata    Fetch/aggregate metadata but skip the iRODS upload
                               (default: false).
@@ -78,6 +82,53 @@ def subcollectionNames(csv) {
         .collect { row -> row.path.replaceAll('/$', '').tokenize('/').last() }
 }
 
+/////////////// ADAPTERS FOR STATICALLY TYPED MODULES ////////////////////////
+// The validation modules are written with static types: they take flat values
+// (`tuple(id: String, path: Path)`) and emit every output on its own channel --
+// `out.meta` carries an ArrayTuple wrapping the per-task record, while
+// `out.txt`/`out.list` carry bare Paths with no metadata attached. The rest of
+// this workflow still speaks the `(meta: Map, files)` convention, so the
+// helpers below translate between the two. They are the only place that needs
+// to change as the remaining modules are migrated to static types.
+
+// (meta, samplepaths) -> tuple(id, dataset directory).
+// A dataset is validated as a whole directory, so the sample paths of a dataset
+// must share one parent directory named after the dataset.
+def toTypedDataset(datasetch) {
+    return datasetch.map { meta, paths ->
+        def samplepaths = paths instanceof List ? paths : [paths]
+        def parents = samplepaths.collect { path -> path.parent }.unique()
+        if (parents.size() != 1) {
+            error("Samples of dataset ${meta.id} live in more than one directory: ${parents.join(', ')}. All samples of a dataset must share one dataset directory.")
+        }
+        tuple(meta.id, parents.first())
+    }
+}
+
+// (meta, irodspath) -> tuple(id, irodspath)
+def toTypedCollection(collectionch) {
+    return collectionch.map { meta, irodspath -> tuple(meta.id, irodspath.toString()) }
+}
+
+// out.meta (ArrayTuple of [id: .., path: ..]) -> the entries of `datasetch`
+// that the process emitted, in the original (meta, files) shape. Tasks that
+// failed validation never emit, so they are dropped here as well.
+def fromTypedMeta(typedmetach, datasetch) {
+    return datasetch
+        .map { meta, files -> tuple(meta.id, meta, files) }
+        .join(typedmetach.map { record -> tuple(record[0].id, record[0].path) })
+        .map { _id, meta, files, _typedpath -> tuple(meta, files) }
+}
+
+// out.txt (bare Paths named "<id>.txt") -> (meta, report), keyed on the report
+// file name so the pairing does not rely on channel emission order.
+def fromTypedReport(reportch, datasetch) {
+    return reportch
+        .map { report -> tuple(report.baseName, report) }
+        .join(datasetch.map { meta, _files -> tuple(meta.id, meta) })
+        .map { _id, report, meta -> tuple(meta, report) }
+}
+
 workflow {
     main:
     /////////////// PARAMETER VALIDATION ////////////////////////
@@ -115,7 +166,7 @@ workflow {
             ]
 
     /////////////// INITIALIZE CHANNELS ////////////////////////
-    versions            = channel.empty()
+    versions            = channel.topic('versions')
     metadata            = channel.empty()
     outmetadata         = channel.empty()
     outdatasetmeta      = channel.empty()
@@ -124,8 +175,10 @@ workflow {
     validateirods       = channel.empty()
     md5sums             = channel.empty()
     samples             = params.samples && !params.validatecollections ? channel.fromPath(params.samples, checkIfExists: true) : channel.empty()
-    irodsconfig         = params.irodsconfig ? channel.value(file(params.irodsconfig, type: 'file', checkIfExists: true)) : channel.empty()
+    irodsconfig         = needsIrods ? channel.value(file(params.irodsconfig, type: 'file', checkIfExists: true)) : channel.empty()
     validatecollections = params.validatecollections ? channel.fromPath(params.validatecollections, checkIfExists: true) : channel.empty()
+    schema_local        = channel.value(file(params.schema_local, type: 'file', checkIfExists: true))
+    schema_irods        = channel.value(file(params.schema_irods, type: 'file', checkIfExists: true))
     
     /////////////// STEP 0: INPUTS ///////////////////////
     samples = samples
@@ -143,9 +196,9 @@ workflow {
 
 
     /////////////// STEP 1.1: VALIDATE LOCAL DIRECTORIES ///////////////
-    REPROCESS10X_VALIDATELOCAL(datasets)
-    validatelocal = validatelocal.mix(REPROCESS10X_VALIDATELOCAL.out.txt)
-    versions = versions.mix(REPROCESS10X_VALIDATELOCAL.out.versions.first())
+    REPROCESS10X_VALIDATELOCAL(toTypedDataset(datasets), schema_local)
+    validateddatasets = fromTypedMeta(REPROCESS10X_VALIDATELOCAL.out.meta, datasets)
+    validatelocal = validatelocal.mix(fromTypedReport(REPROCESS10X_VALIDATELOCAL.out.txt, datasets))
 
     if (!params.validate_local_only) {
         /////////////// STEP 1.2: LIST WHAT ALREADY EXISTS ON iRODS ///////////////////////
@@ -155,7 +208,7 @@ workflow {
         // we re-join the listing against the full dataset channel with an empty
         // listing as the default (remainder: true).
         IRODS_LISTCOLLECTION(
-            REPROCESS10X_VALIDATELOCAL.out.dataset.map { meta, _pathlist ->
+            validateddatasets.map { meta, _pathlist ->
                 tuple(meta, "${params.irodsbase}/${meta.id}".toString())
             },
             irodsconfig
@@ -163,7 +216,7 @@ workflow {
         versions = versions.mix(IRODS_LISTCOLLECTION.out.versions.first())
 
         // meta.id (dataset) -> list of sample sub-collections already on iRODS
-        datasetUploaded = REPROCESS10X_VALIDATELOCAL.out.dataset
+        datasetUploaded = validateddatasets
             .map { meta, _pathlist -> tuple(meta.id, meta) }
             .join(
                 IRODS_LISTCOLLECTION.out.csv.map { meta, csv -> tuple(meta.id, subcollectionNames(csv)) },
@@ -171,27 +224,41 @@ workflow {
             )
             .map { _id, meta, uploaded -> tuple(meta, uploaded ?: []) }
 
-        // Abort if any requested sample already exists on iRODS.
-        samples
+        // Abort if any requested sample already exists on iRODS. The full list is
+        // written to results/already_on_irods.csv (dataset_id,sample_id,irodspath)
+        // so it can be inspected or fed to a cleanup script, rather than scrolling
+        // past hundreds of warning lines.
+        alreadyOnIrods = samples
             .map { meta, _path -> tuple(meta.dataset_id, meta) }
             .combine(
                 datasetUploaded.map { meta, uploaded -> tuple(meta.id, uploaded) },
                 by: 0
             )
             .filter { _dataset_id, meta, uploaded -> meta.id in uploaded }
-            .map { _dataset_id, meta, _uploaded ->
-                log.warn("Sample ${meta.id} from dataset ${meta.dataset_id} already exists on iRODS.")
-                meta
+            .map { _dataset_id, meta, _uploaded -> meta }
+
+        alreadyOnIrods
+            .collectFile(
+                name: 'already_on_irods.csv',
+                storeDir: params.outdir,
+                newLine: true,
+                sort: true,
+                seed: 'dataset_id,sample_id,irodspath'
+            ) { meta ->
+                "${meta.dataset_id},${meta.id},${params.irodsbase}/${meta.dataset_id}/${meta.id}"
             }
-            .collect(flat: false)
-            .subscribe { existing ->
-                if (existing.size() > 0) {
-                    error("${existing.size()} sample(s) already exist on iRODS. Exiting...")
+            .subscribe { reportFile ->
+                // collectFile only emits when at least one sample matched; the header
+                // seed alone means every requested sample is new (2 lines incl. header
+                // would mean one match). Count data rows and abort if any exist.
+                def dataRows = reportFile.readLines().findAll { line -> line && !line.startsWith('dataset_id,') }
+                if (dataRows.size() > 0) {
+                    error("${dataRows.size()} sample(s) already exist on iRODS. See ${reportFile} for the full list. Exiting...")
                 }
             }
 
         /////////////// STEP 2: FETCH METADATA ////////////////////////
-        public_datasets = REPROCESS10X_VALIDATELOCAL.out.dataset
+        public_datasets = validateddatasets
             .filter { meta, _pathlist -> checkIfPublic(meta.id) }
             .map { meta, pathlist ->
                 def paths = pathlist instanceof List ? pathlist : [pathlist] // ensure pathlist is a list
@@ -357,9 +424,21 @@ workflow {
 
     ////////////// STEP 6: VALIDATE UPLOADED COLLECTIONS ////////////////////////
     if (params.validatecollections || (!params.validate_local_only && !params.collect_metadata)) {
-        REPROCESS10X_VALIDATEIRODS(validatecollections, irodsconfig)
-        validateirods = validateirods.mix(REPROCESS10X_VALIDATEIRODS.out.txt)
-        versions = versions.mix(REPROCESS10X_VALIDATEIRODS.out.versions.first())
+        REPROCESS10X_VALIDATEIRODS(toTypedCollection(validatecollections), schema_irods, irodsconfig)
+        validateirods = validateirods.mix(fromTypedReport(REPROCESS10X_VALIDATEIRODS.out.txt, validatecollections))
+
+        // out.list carries bare Paths (every task writes "extra_files.list"), and
+        // the collection is named inside the file, so no metadata is needed here.
+        REPROCESS10X_VALIDATEIRODS.out.list
+            .collectFile(
+                name: 'irods_extra_files.list',
+                storeDir: params.outdir,
+                newLine: true,
+                sort: true
+            ) { path -> path.getText() }
+            .subscribe { __ -> 
+                    log.info("iRODS extra files list saved to ${params.outdir}/irods_extra_files.list")
+                }
     }
 
     /////////////// COLLECT FILES ////////////////////////
