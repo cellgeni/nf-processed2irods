@@ -10,7 +10,7 @@ The module:
 2. Lists data objects and subcollections at the given iRODS path.
 3. Writes results to `output.csv`.
 
-By default the listing is non-recursive. Pass `--recursive` via `ext.args` to recurse into subcollections.
+By default the listing covers a single level (`--depth 1`). Pass a higher `--depth` via `ext.args` to recurse that many collection levels deep.
 
 ## Inputs
 
@@ -77,7 +77,7 @@ process {
 
 | Argument | Description |
 |---|---|
-| `--recursive` | Recurse into subcollections. |
+| `--depth <n>` | Number of collection levels to list. `1` (default) lists only the given collection; higher values recurse that many levels deep. |
 | `--env-file <path>` | Path to `irods_environment.json`. Overrides the default `~/.irods/irods_environment.json`. |
 
 ## Usage

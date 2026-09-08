@@ -14,7 +14,7 @@ def make_session(env_path: Path) -> iRODSSession:
     return iRODSSession(irods_env_file=str(env_path))
 
 
-def list_collection(session: iRODSSession, collection_path: str, recursive: bool):
+def list_collection(session: iRODSSession, collection_path: str, depth: int):
     collection = session.collections.get(collection_path)
 
     for obj in collection.data_objects:
@@ -32,8 +32,10 @@ def list_collection(session: iRODSSession, collection_path: str, recursive: bool
             "size": "",
             "checksum": "",
         }
-        if recursive:
-            yield from list_collection(session, subcollection.path, recursive=True)
+        # depth counts how many levels to list: depth=1 lists only this level,
+        # so we recurse into subcollections only while depth is still > 1.
+        if depth > 1:
+            yield from list_collection(session, subcollection.path, depth=depth - 1)
 
 
 def main() -> int:
@@ -50,11 +52,22 @@ def main() -> int:
         help="Output CSV file path. Defaults to <collection_name>.csv",
     )
     parser.add_argument(
-        "-r", "--recursive",
+        "-d", "--depth",
+        type=int,
+        default=1,
+        help="Number of collection levels to list. 1 (default) lists only the "
+             "given collection; higher values recurse that many levels deep.",
+    )
+    parser.add_argument(
+        "--no-exit",
         action="store_true",
-        help="Recurse into subcollections",
+        help="If the collection does not exist, write an empty listing "
+             "(header only) and exit 0 instead of failing with exit 2",
     )
     args = parser.parse_args()
+
+    if args.depth < 1:
+        parser.error("--depth must be >= 1")
 
     output_path = Path(args.output) if args.output else Path(args.collection.rstrip("/").split("/")[-1] + ".csv")
 
@@ -72,8 +85,17 @@ def main() -> int:
             with output_path.open("w", newline="") as fh:
                 writer = csv.DictWriter(fh, fieldnames=["type", "path", "size", "checksum"])
                 writer.writeheader()
-                for item in list_collection(session, args.collection, recursive=args.recursive):
-                    writer.writerow(item)
+                try:
+                    for item in list_collection(session, args.collection, depth=args.depth):
+                        writer.writerow(item)
+                except (CollectionDoesNotExist, DataObjectDoesNotExist):
+                    # With --no-exit a missing collection is not an error: the
+                    # empty listing (header only) has already been written, so
+                    # just report it and exit cleanly. Otherwise re-raise so the
+                    # caller sees the original exit-2 failure.
+                    if not args.no_exit:
+                        raise
+                    print(f"Collection does not exist yet, empty listing: {args.collection}", file=sys.stderr)
 
         print(f"Written to {output_path}", file=sys.stderr)
 

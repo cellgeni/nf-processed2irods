@@ -1,6 +1,6 @@
 $schema: https://raw.githubusercontent.com/nextflow-io/schemas/refs/heads/main/module/v1/schema.json
 name: cellgeni/irods/listcollection
-version: 0.0.1
+version: 0.0.2
 description: List the contents of an iRODS collection and write results to a CSV file.
 keywords:
 - iRODS
