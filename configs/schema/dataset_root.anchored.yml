@@ -1,0 +1,201 @@
+# dataset_root.yml -- single self-contained schema.
+# Repeated blocks are declared once with a YAML anchor (&name) and reused
+# elsewhere with an alias (*name). Plain YAML: no !include loader needed.
+name:
+  pattern: '^(?:GSE|E-MTAB-|EGAD|PRJEB|PRJNA|HRA)\d+$'
+
+metadata_keys: []
+
+data_objects:
+  - pattern: '^.*(?:ena|sra)\.tsv$'
+    min: 1
+    max: 2
+  - pattern: '^.*family\.soft$'
+    min: 0
+    max: 1
+  - pattern: '^.*parsed\.tsv$'
+    min: 1
+    max: 1
+  - pattern: '^.*solo.qc.?\.tsv$'
+    min: 1
+    max: 2
+  - pattern: '^.*(?:sdrf|idf)\.txt$'
+    min: 0
+    max: 2
+  - pattern: '^.*sample_x_run\.tsv$'
+    min: 0
+    max: 1
+  - pattern: '^.*sample\.relation\.list$'
+    min: 0
+    max: 1
+  - pattern: '^links\.tsv$'
+    min: 0
+    max: 1
+  - pattern: '^.*(?:sample|project|run|urls)\.list$'
+    min: 0
+    max: null
+  - pattern: '^.*accessions\.tsv$'
+    min: 0
+    max: null
+  - pattern: '^.*(?:protocol.tsv|qc.txt|starsolo.tsv|species.txt)$'
+    description: 'Old files that may be present in some datasets'
+    min: 0
+    max: null
+
+collections:
+  # ---- sample collection (SRS/GSM/ERS) -------------------------------------
+  - name:
+      pattern: '^(SRS|GSM|ERS)\d+$'
+      min: 1
+      max: null
+
+    # STAR alignment files sitting directly in the sample collection
+    data_objects:
+      - pattern: '^Log\.final\.out$'
+        min: 1
+        max: 1
+      - pattern: '^Log\.out$'
+        min: 1
+        max: 1
+      - pattern: '^Log\.progress\.out$'
+        min: 1
+        max: 1
+      - pattern: '^SJ\.out\.tab$'
+        min: 1
+        max: 1
+      - pattern: '^strand\.txt$'
+        description: 'Old file that may be present in some datasets'
+        min: 0
+        max: 1
+      - pattern: '^Unmapped\.out\.mate[12]\.bz2$'
+        min: 2
+        max: 2
+
+    collections:
+      # ---- output/ -------------------------------------------------------
+      - name:
+          pattern: '^output$'
+          min: 1
+          max: 1
+
+        data_objects:
+          - pattern: '^Barcodes\.stats$'
+            min: 1
+            max: 1
+
+        collections:
+          # ---- output/Gene ----------------------------------------------
+          - name:
+              pattern: '^Gene$'
+              min: 1
+              max: 1
+            # anchor: shared by Gene and GeneFull
+            data_objects: &gene_files
+              - pattern: '^Features\.stats$'
+                min: 1
+                max: 1
+              - pattern: '^Summary\.csv$'
+                min: 1
+                max: 1
+              - pattern: '^UMIperCellSorted\.txt$'
+                min: 1
+                max: 1
+            collections: &gene_collections
+              - name:
+                  pattern: '^filtered'
+                  min: 1
+                  max: 1
+                data_objects:
+                  - pattern: '^barcodes\.tsv\.gz$'
+                    min: 1
+                    max: 1
+                  - pattern: '^features\.tsv\.gz$'
+                    min: 1
+                    max: 1
+                  - pattern: '^matrix\.mtx\.gz$'
+                    min: 1
+                    max: 1
+                collections: []
+                allow_extra_files: false
+                allow_extra_collections: false
+
+              - name:
+                  pattern: '^raw$'
+                  min: 1
+                  max: 1
+                data_objects:
+                  - pattern: '^barcodes\.tsv\.gz$'
+                    min: 1
+                    max: 1
+                  - pattern: '^features\.tsv\.gz$'
+                    min: 1
+                    max: 1
+                  - pattern: '^matrix\.mtx\.gz$'
+                    min: 1
+                    max: 1
+                  - pattern: '^UniqueAndMult-EM\.mtx\.gz$'
+                    min: 0
+                    max: 1
+                collections: []
+                allow_extra_files: false
+                allow_extra_collections: false
+            allow_extra_files: false
+            allow_extra_collections: false
+
+          # ---- output/GeneFull ------------------------------------------
+          - name:
+              pattern: 'GeneFull$'
+              min: 1
+              max: 1
+            data_objects: *gene_files
+            collections: *gene_collections
+            allow_extra_files: false
+            allow_extra_collections: false
+
+          # ---- output/Velocyto ------------------------------------------
+          - name:
+              pattern: '^Velocyto$'
+              min: 0
+              max: 1
+            data_objects:
+              - pattern: '^Features\.stats$'
+                min: 1
+                max: 1
+              - pattern: '^Summary\.csv$'
+                min: 1
+                max: 1
+            collections:
+              - name:
+                  pattern: '^(?:filtered|raw)'
+                  min: 2
+                  max: 2
+                data_objects:
+                  - pattern: '^barcodes\.tsv\.gz$'
+                    min: 1
+                    max: 1
+                  - pattern: '^features\.tsv\.gz$'
+                    min: 1
+                    max: 1
+                  - pattern: '^ambiguous\.mtx\.gz$'
+                    min: 1
+                    max: 1
+                  - pattern: '^unspliced\.mtx\.gz$'
+                    min: 1
+                    max: 1
+                  - pattern: '^spliced\.mtx\.gz$'
+                    min: 1
+                    max: 1
+                collections: []
+                allow_extra_files: false
+                allow_extra_collections: false
+            allow_extra_files: false
+            allow_extra_collections: false
+
+        allow_extra_files: false
+        allow_extra_collections: false
+
+    allow_extra_files: false
+    allow_extra_collections: false
+
+allow_extra_files: false
+allow_extra_collections: false
