@@ -1,6 +1,6 @@
 # dataset_root.yml
 name:
-  pattern: '^(?:GSE|E-MTAB-|EGAD|PRJEB|PRJNA|HRA)\d+$'
+  pattern: '^(?:GSE|E-MTAB-|EGAD|PRJEB|PRJDB|PRJNA|HRA)\d+$'
 
 metadata_keys: []
 

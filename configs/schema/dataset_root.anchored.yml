@@ -2,7 +2,7 @@
 # Repeated blocks are declared once with a YAML anchor (&name) and reused
 # elsewhere with an alias (*name). Plain YAML: no !include loader needed.
 name:
-  pattern: '^(?:GSE|E-MTAB-|EGAD|PRJEB|PRJNA|HRA)\d+$'
+  pattern: '^(?:GSE|E-MTAB-|EGAD|PRJEB|PRJDB|PRJNA|HRA)\d+$'
 
 metadata_keys: []
 
@@ -43,9 +43,9 @@ data_objects:
     max: null
 
 collections:
-  # ---- sample collection (SRS/GSM/ERS) -------------------------------------
+  # ---- sample collection (SRS/GSM/ERS/DRS) -------------------------------------
   - name:
-      pattern: '^(SRS|GSM|ERS)\d+$'
+      pattern: '^(SRS|GSM|ERS|DRS)\d+$'
       min: 1
       max: null
 

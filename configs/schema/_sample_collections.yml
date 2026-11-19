@@ -1,6 +1,6 @@
 # _sample_collections.yml
 - name:
-    pattern: '^(SRS|GSM|ERS)\d+$'
+    pattern: '^(SRS|GSM|ERS|DRS)\d+$'
     min: 1
     max: null
 
